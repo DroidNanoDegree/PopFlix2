@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#00020d</color>
+    <color name="colorPrimaryDark">#00020d</color>
+    <color name="colorAccent">#f4eff1</color>
+    <color name="colorText">#f4eff1</color>
+
+    <!-- Detail Activity -->
+    <color name="colorGreyLight">#d6d6d6</color>
+    <color name="colorGreyDark">#a4a4a4</color>
+</resources>
