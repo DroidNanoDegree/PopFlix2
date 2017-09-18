@@ -17,7 +17,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.sriky.popflix.settings.SettingsActivity;
-import com.sriky.popflix.utilities.MovieDataHelper;
+import com.sriky.popflix.utilities.MovieDataUtils;
 import com.sriky.popflix.utilities.NetworkUtils;
 
 import java.util.ArrayList;
@@ -82,7 +82,7 @@ public class PopularMoviesActivity extends AppCompatActivity
         //trigger the asynctaskloader to download movie data.
         //The following call will initialize a new loader if one doesn't exist.
         //If an old loader exist and has loaded the data, then onLoadFinished() will be triggered.
-        getSupportLoaderManager().initLoader(MovieDataHelper.BASIC_MOVIE_DATA_LOADER_ID,
+        getSupportLoaderManager().initLoader(MovieDataUtils.BASIC_MOVIE_DATA_LOADER_ID,
                 getBundleForLoader(), PopularMoviesActivity.this);
     }
 
@@ -91,7 +91,7 @@ public class PopularMoviesActivity extends AppCompatActivity
         super.onStart();
         if(mDisplaySortingOrderChanged){
             mMovieDataArrayList.clear();
-            getSupportLoaderManager().restartLoader(MovieDataHelper.BASIC_MOVIE_DATA_LOADER_ID,
+            getSupportLoaderManager().restartLoader(MovieDataUtils.BASIC_MOVIE_DATA_LOADER_ID,
                     getBundleForLoader(), PopularMoviesActivity.this);
             mDisplaySortingOrderChanged = false;
         }
@@ -127,7 +127,7 @@ public class PopularMoviesActivity extends AppCompatActivity
     public void onClickedItemAt(int index) {
         try {
             Intent intent = new Intent(this, MovieDetailActivity.class);
-            intent.putExtra(MovieDataHelper.MOVIE_ID_INTENT_EXTRA_KEY,
+            intent.putExtra(MovieDataUtils.MOVIE_ID_INTENT_EXTRA_KEY,
                     mMovieDataArrayList.get(index).getMovieID());
             startActivity(intent);
         } catch (ArrayIndexOutOfBoundsException e) {
@@ -160,7 +160,7 @@ public class PopularMoviesActivity extends AppCompatActivity
     public void onLoadFinished(Loader<String> loader, String data) {
         if (data != null) {
             Log.d(TAG, "onLoadFinished: data.length() = " + data.length());
-            mMovieDataArrayList.addAll(MovieDataHelper.getListfromJSONResponse(data));
+            mMovieDataArrayList.addAll(MovieDataUtils.getListfromJSONResponse(data));
             onDataLoadComplete();
         } else {
             onDataLoadFailed();
@@ -178,8 +178,8 @@ public class PopularMoviesActivity extends AppCompatActivity
      */
     private Bundle getBundleForLoader() {
         Bundle bundleForLoader = new Bundle();
-        bundleForLoader.putString(MovieDataHelper.FETCH_MOVIE_DATA_URL_KEY,
-                NetworkUtils.buildURL(mSortingOrder, MovieDataHelper.TMDB_API_KEY).toString());
+        bundleForLoader.putString(MovieDataUtils.FETCH_MOVIE_DATA_URL_KEY,
+                NetworkUtils.buildURL(mSortingOrder, MovieDataUtils.TMDB_API_KEY).toString());
 
         return bundleForLoader;
     }

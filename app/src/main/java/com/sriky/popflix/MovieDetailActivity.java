@@ -19,7 +19,7 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
-import com.sriky.popflix.utilities.MovieDataHelper;
+import com.sriky.popflix.utilities.MovieDataUtils;
 import com.sriky.popflix.utilities.NetworkUtils;
 
 import java.net.URL;
@@ -74,15 +74,15 @@ public class MovieDetailActivity extends AppCompatActivity
         }
 
         Intent intent = getIntent();
-        if (intent != null && intent.hasExtra(MovieDataHelper.MOVIE_ID_INTENT_EXTRA_KEY)) {
-            String movieID = intent.getStringExtra(MovieDataHelper.MOVIE_ID_INTENT_EXTRA_KEY);
-            URL url = NetworkUtils.buildURL(movieID, MovieDataHelper.TMDB_API_KEY);
+        if (intent != null && intent.hasExtra(MovieDataUtils.MOVIE_ID_INTENT_EXTRA_KEY)) {
+            String movieID = intent.getStringExtra(MovieDataUtils.MOVIE_ID_INTENT_EXTRA_KEY);
+            URL url = NetworkUtils.buildURL(movieID, MovieDataUtils.TMDB_API_KEY);
             Bundle loaderBundle = new Bundle();
-            loaderBundle.putString(MovieDataHelper.FETCH_MOVIE_DATA_URL_KEY, url.toString());
+            loaderBundle.putString(MovieDataUtils.FETCH_MOVIE_DATA_URL_KEY, url.toString());
             //trigger the asynctaskloader to download movie data.
             //The following call will initialize a new loader if one doesn't exist.
             //If an old loader exist and has loaded the data, then onLoadFinished() will be triggered.
-            getSupportLoaderManager().initLoader(MovieDataHelper.DETAIL_MOVIE_DATA_LOADER_ID,
+            getSupportLoaderManager().initLoader(MovieDataUtils.DETAIL_MOVIE_DATA_LOADER_ID,
                     loaderBundle, MovieDetailActivity.this);
         }
     }
@@ -108,7 +108,7 @@ public class MovieDetailActivity extends AppCompatActivity
 
         String relativePath = mMovieData.getPosterPath();
         Uri uri = NetworkUtils.getURLForImageWithRelativePathAndSize(relativePath,
-                MovieDataHelper.getQueryThumbnailWidthPath());
+                MovieDataUtils.getQueryThumbnailWidthPath());
         Picasso.with(this)
                 .load(uri)
                 .placeholder(R.drawable.loading)
@@ -161,7 +161,7 @@ public class MovieDetailActivity extends AppCompatActivity
     public void onLoadFinished(Loader<String> loader, String data) {
         if (data != null) {
             Log.d(TAG, "onLoadFinished: queryResult.length() = " + data.length());
-            mMovieData = MovieDataHelper.getMovieDataFrom(data);
+            mMovieData = MovieDataUtils.getMovieDataFrom(data);
             onDownloadSuccess();
         } else {
             onFetchFailed();

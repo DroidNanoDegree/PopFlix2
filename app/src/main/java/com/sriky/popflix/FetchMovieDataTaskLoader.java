@@ -5,7 +5,7 @@ import android.os.Bundle;
 import android.support.v4.content.AsyncTaskLoader;
 import android.util.Log;
 
-import com.sriky.popflix.utilities.MovieDataHelper;
+import com.sriky.popflix.utilities.MovieDataUtils;
 import com.sriky.popflix.utilities.NetworkUtils;
 
 import java.io.IOException;
@@ -62,8 +62,8 @@ class FetchMovieDataTaskLoader extends AsyncTaskLoader<String> {
     @Override
     public String loadInBackground() {
         String result = null;
-        if (mLoaderArgs != null && mLoaderArgs.containsKey(MovieDataHelper.FETCH_MOVIE_DATA_URL_KEY)) {
-            String urlStr = mLoaderArgs.getString(MovieDataHelper.FETCH_MOVIE_DATA_URL_KEY);
+        if (mLoaderArgs != null && mLoaderArgs.containsKey(MovieDataUtils.FETCH_MOVIE_DATA_URL_KEY)) {
+            String urlStr = mLoaderArgs.getString(MovieDataUtils.FETCH_MOVIE_DATA_URL_KEY);
             Log.d(TAG, "loadInBackground: URL = " + urlStr);
             try {
                 URL url = new URL(urlStr);

@@ -14,7 +14,7 @@ import java.util.ArrayList;
 /**
  * Helper class to handle json parsing, setting the query path for movie thumbnails etc.
  */
-public final class MovieDataHelper {
+public final class MovieDataUtils {
 
     public static final String MOVIE_ID_INTENT_EXTRA_KEY = "movie_id";
     public static final String TMDB_API_KEY = BuildConfig.TMDB_API_KEY;
@@ -26,7 +26,7 @@ public final class MovieDataHelper {
     //URL keys for sending and retrieving urls with the "FetchMovieDataTaskLoader".
     public static final String FETCH_MOVIE_DATA_URL_KEY = "fetch_movie_data_url";
 
-    private static final String TAG = MovieDataHelper.class.getSimpleName();
+    private static final String TAG = MovieDataUtils.class.getSimpleName();
 
     //TMDB query - json keys.
     private static final String JSON_KEY_ARRAY_RESULTS = "results";
