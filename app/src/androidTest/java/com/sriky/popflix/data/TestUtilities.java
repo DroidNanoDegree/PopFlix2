@@ -16,7 +16,13 @@
 package com.sriky.popflix.data;
 
 import android.content.ContentValues;
+import android.content.Context;
+import android.database.ContentObserver;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
+import android.os.Handler;
+import android.os.HandlerThread;
 
 import com.sriky.popflix.data.MoviesContract.MoviesEntry;
 
@@ -26,6 +32,8 @@ import java.util.Set;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertTrue;
 
 /**
  * Class contains utility methods to support the Test cases.
@@ -64,34 +72,62 @@ public class TestUtilities {
         ContentValues[] cvArray = new ContentValues[3];
         cvArray[0] = createMoviesContentValues();
         cvArray[1] = createMoviesContentValues();
-        cvArray[1] = createMoviesContentValues();
+        cvArray[2] = createMoviesContentValues();
         return cvArray;
     }
 
-    public static void validateCurrentRecord(String expectedMoviesDidntMatchActual,
-                                             Cursor moviesCursor, ContentValues testMovieValues) {
-        Set<Map.Entry<String, Object>> valueSet = testMovieValues.valueSet();
+    /**
+     * Validates the supplied cursor with contentValues and asserts if they don't match or
+     * cursor is null or empty!
+     *
+     * @param error          The error message to display.
+     * @param cursor         The cursor returned after a query.
+     * @param contentValues  The contentValues to compare the cursor items with.
+     */
+    public static void validateCursorWithContentValues(String error,
+                                                       Cursor cursor, ContentValues contentValues) {
+
+        /* sanity checks for valid cursor */
+        assertNotNull("This cursor is null!!!", cursor);
+        if(cursor.getPosition() == -1) {
+            assertTrue("Empty cursor returned! " + error, cursor.moveToFirst());
+        }
+
+        Set<Map.Entry<String, Object>> valueSet = contentValues.valueSet();
 
         for (Map.Entry<String, Object> entry : valueSet) {
             String columnName = entry.getKey();
-            int index = moviesCursor.getColumnIndex(columnName);
+            int index = cursor.getColumnIndex(columnName);
 
             /* Test to see if the column is contained within the cursor */
             String columnNotFoundError = "Column '" + columnName + "' not found. "
-                    + expectedMoviesDidntMatchActual;
+                    + error;
             assertFalse(columnNotFoundError, index == -1);
 
             /* Test to see if the expected value equals the actual value (from the Cursor) */
             String expectedValue = entry.getValue().toString();
-            String actualValue = moviesCursor.getString(index);
+            String actualValue = cursor.getString(index);
 
             String valuesDontMatchError = "Actual value '" + actualValue
                     + "' did not match the expected value '" + expectedValue + "'. "
-                    + expectedMoviesDidntMatchActual;
+                    + error;
 
             assertEquals(valuesDontMatchError,
                     expectedValue,
                     actualValue);
         }
+    }
+
+    /**
+     * Helper method to delete all entries in the movies table.
+     */
+    public static void deleteAllItemsInMoviesTable(Context context) {
+        MoviesDbHelper moviesDBHelper = new MoviesDbHelper(context);
+        SQLiteDatabase db = moviesDBHelper.getWritableDatabase();
+
+        db.delete(MoviesEntry.TABLE_NAME,
+                null,
+                null);
+
     }
 }

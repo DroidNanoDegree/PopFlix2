@@ -36,17 +36,22 @@ import static junit.framework.Assert.assertTrue;
 /**
  * Class to test the database used with PopFlix. Following are the tests:
  * 1). Creation of Database and tables.
+ * 2). Inserting single item into the movies table.
+ * 3). Inserting items with the same movie ID should replace old entry as per the defined contract.
+ * 4). _ID field part of BaseColumns autoincrement as per the defined contract.
+ * 5. Database version update dropping the old table.
+ * 6. Deleting all items.
  */
 
-public class TestMoviesDataBase {
-    private static final String TAG = TestMoviesDataBase.class.getSimpleName();
+public class TestMoviesDatabase {
+    private static final String TAG = TestMoviesDatabase.class.getSimpleName();
     private final Context mContext =
             InstrumentationRegistry.getTargetContext();
 
     @Before
     public void before() {
         /* delete all items from the movies table */
-        deletedAllItemsInMoviesTable();
+        TestUtilities.deleteAllItemsInMoviesTable(mContext);
     }
 
     /**
@@ -105,7 +110,7 @@ public class TestMoviesDataBase {
     public void testInsertSingleRecordIntoMoviesTable() {
 
         /* Obtain movies values from TestUtilities */
-        ContentValues testWeatherValues = TestUtilities.createMoviesContentValues();
+        ContentValues testMovieValues = TestUtilities.createMoviesContentValues();
 
         MoviesDbHelper moviesDbHelper = new MoviesDbHelper(mContext);
         SQLiteDatabase db = moviesDbHelper.getWritableDatabase();
@@ -113,7 +118,7 @@ public class TestMoviesDataBase {
         long moviesRowId = db.insert(
                 MoviesEntry.TABLE_NAME,
                 null,
-                testWeatherValues);
+                testMovieValues);
 
         /* If the insert fails, database.insert returns -1 */
         int valueOfIdIfInsertFails = -1;
@@ -140,11 +145,11 @@ public class TestMoviesDataBase {
                 moviesCursor.moveToFirst());
 
         /* Verify that the returned results match the expected results */
-        String expectedWeatherDidntMatchActual =
+        String expectedMoviesDidntMatchActual =
                 "Expected movies values didn't match actual values.";
-        TestUtilities.validateCurrentRecord(expectedWeatherDidntMatchActual,
+        TestUtilities.validateCursorWithContentValues(expectedMoviesDidntMatchActual,
                 moviesCursor,
-                testWeatherValues);
+                testMovieValues);
 
         /*
          * Since before every method annotated with the @Test annotation, the database is
@@ -155,9 +160,9 @@ public class TestMoviesDataBase {
         assertFalse("Error: More than one record returned from movies query",
                 moviesCursor.moveToNext());
 
-        /* Close cursor */
-        moviesCursor.close();
+        /* close the db & cursor */
         moviesDbHelper.close();
+        moviesCursor.close();
     }
 
     /**
@@ -187,7 +192,7 @@ public class TestMoviesDataBase {
                 testMovieValues);
 
         /* Query for the movie records */
-        Cursor newWeatherIdCursor = db.query(
+        Cursor newMoviesIdCursor = db.query(
                 MoviesEntry.TABLE_NAME,
                 new String[]{MoviesEntry.MOVIE_ID},
                 null,
@@ -199,10 +204,10 @@ public class TestMoviesDataBase {
         String recordWithNewIdNotFound =
                 "New record did not overwrite the previous record for the same movie ID.";
         assertTrue(recordWithNewIdNotFound,
-                newWeatherIdCursor.getCount() == 1);
+                newMoviesIdCursor.getCount() == 1);
 
-        /* Always close the cursor after you're done with it */
-        newWeatherIdCursor.close();
+        /* close the cursor and db. */
+        newMoviesIdCursor.close();
         moviesDbHelper.close();
     }
 
@@ -252,6 +257,7 @@ public class TestMoviesDataBase {
         assertNotSame(sequentialInsertsDoNotAutoIncrementId,
                 firstRowId, secondRowId);
 
+        /* close the db. */
         db.close();
         moviesDbHelper.close();
     }
@@ -291,7 +297,7 @@ public class TestMoviesDataBase {
         /* We are done verifying our table names, so we can close this cursor */
         tableNameCursor.close();
 
-        Cursor shouldBeEmptyWeatherCursor = db.query(
+        Cursor shouldBeEmptyMoviesCursor = db.query(
                 MoviesEntry.TABLE_NAME,
                 null,
                 null,
@@ -307,8 +313,9 @@ public class TestMoviesDataBase {
                         + "\nNumber of records: ";
         assertEquals(movieTableShouldBeEmpty,
                 expectedRecordCountAfterUpgrade,
-                shouldBeEmptyWeatherCursor.getCount());
+                shouldBeEmptyMoviesCursor.getCount());
 
+        /* close the db. */
         db.close();
         moviesDBHelper.close();
     }
@@ -321,6 +328,9 @@ public class TestMoviesDataBase {
         MoviesDbHelper moviesDBHelper = new MoviesDbHelper(mContext);
         SQLiteDatabase db = moviesDBHelper.getWritableDatabase();
 
+        /* query to get a cursor so can find out the number of items
+        * in the movies tables prior to deleting
+        * */
         Cursor cursor = db.query(MoviesEntry.TABLE_NAME,
                 null,
                 null,
@@ -330,7 +340,6 @@ public class TestMoviesDataBase {
                 null);
 
         int numOfRowPriorToDeleting = cursor.getCount();
-        cursor.close();
         int rowsDeleted = db.delete(MoviesEntry.TABLE_NAME,
                 null,
                 null);
@@ -340,6 +349,8 @@ public class TestMoviesDataBase {
                 numOfRowPriorToDeleting,
                 rowsDeleted);
 
+        /* close the cursor and db. */
+        cursor.close();
         db.close();
         moviesDBHelper.close();
     }
