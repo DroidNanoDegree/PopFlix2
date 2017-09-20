@@ -34,9 +34,10 @@ import com.sriky.popflix.data.MoviesContract.MoviesEntry;
 public class MoviesProvider extends ContentProvider {
 
     /* The identifier for the movies directory */
-    private static final int CODE_MOVIES = 100;
+    public static final int CODE_MOVIES = 100;
     /* The identifier per movie which would be represented by the movieId */
-    private static final int CODE_MOVIE_WITH_ID = 101;
+    public static final int CODE_MOVIE_WITH_ID = 101;
+
     /* UriMatcher used by MoviesProvider. */
     private static final UriMatcher sUriMatcher = buildUriMatcher();
     /* Handle to the SQLLiteOpenHelper */
