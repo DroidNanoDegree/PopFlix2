@@ -42,12 +42,23 @@
                 android:value=".PopularMoviesActivity" />
         </activity>
 
+        <!-- The IntentService responsible for fetching movie data -->
+        <service android:name=".sync.MovieDataSyncIntentService"
+            android:exported="false"/>
+
+        <!-- FirebaseJobService that periodically fetches the movie data -->
+        <service android:name=".sync.MovieDataFirebaseJobService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.firebase.jobdispatcher.ACTION_EXECUTE"/>
+            </intent-filter>
+        </service>
+
         <!-- Content Provider -->
         <provider
             android:authorities="com.sriky.popflix"
             android:name=".data.MoviesProvider"
-            android:exported="false">
-        </provider>
+            android:exported="false"/>
 
     </application>
 

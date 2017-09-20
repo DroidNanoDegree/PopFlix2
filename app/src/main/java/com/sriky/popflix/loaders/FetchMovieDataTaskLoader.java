@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package com.sriky.popflix;
+package com.sriky.popflix.loaders;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -32,12 +32,12 @@ import java.net.URL;
  * FetchMovieDataTaskListener.
  */
 
-class FetchMovieDataTaskLoader extends AsyncTaskLoader<String> {
+public class FetchMovieDataTaskLoader extends AsyncTaskLoader<String> {
 
     /**
      * Base Interface for routing async task callbacks.
      */
-    interface FetchMovieDataTaskListener {
+    public interface FetchMovieDataTaskListener {
         void onPreExecute();
     }
 
@@ -53,7 +53,7 @@ class FetchMovieDataTaskLoader extends AsyncTaskLoader<String> {
        backgrouded etc. */
     private String mResult;
 
-    FetchMovieDataTaskLoader(Context context, Bundle loaderArgs) {
+    public FetchMovieDataTaskLoader(Context context, Bundle loaderArgs) {
         super(context);
         mLoaderArgs = loaderArgs;
         if (context instanceof FetchMovieDataTaskListener) {

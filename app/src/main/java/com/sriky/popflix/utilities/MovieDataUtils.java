@@ -15,10 +15,12 @@
 
 package com.sriky.popflix.utilities;
 
+import android.content.ContentValues;
 import android.util.Log;
 
 import com.sriky.popflix.BuildConfig;
 import com.sriky.popflix.MovieData;
+import com.sriky.popflix.data.MoviesContract.MoviesEntry;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,7 +41,18 @@ public final class MovieDataUtils {
     public static final int DETAIL_MOVIE_DATA_LOADER_ID = BASIC_MOVIE_DATA_LOADER_ID + 1;
 
     //URL keys for sending and retrieving urls with the "FetchMovieDataTaskLoader".
+    public static final String BUNDLE_KEY_MOVIE_URL = "bundle_extra_movie_data_url";
     public static final String FETCH_MOVIE_DATA_URL_KEY = "fetch_movie_data_url";
+
+    /* project array used to query data from movies table. */
+    public static final String[] MOVIE_DATA_PROJECTION = {
+            MoviesEntry.MOVIE_ID,
+            MoviesEntry.MOVIE_POSTER_PATH,
+    };
+
+    /* indexes for get the column data from the cursor. */
+    public static final int INDEX_MOVIE_ID = 0;
+    public static final int INDEX_POSTER_PATH = 1;
 
     private static final String TAG = MovieDataUtils.class.getSimpleName();
 
@@ -47,7 +60,8 @@ public final class MovieDataUtils {
     private static final String JSON_KEY_ARRAY_RESULTS = "results";
     private static final String JSON_KEY_MOVIE_POSTER_PATH = "poster_path";
     private static final String JSON_KEY_MOVIE_OVERVIEW = "overview";
-    private static final String JSON_KEY_MOVIE_VOTE_AVERAGE = "vote_average";
+    private static final String JSON_KEY_MOVIE_VOTE_COUNT = "vote_average";
+    private static final String JSON_KEY_MOVIE_VOTE_AVERAGE = "vote_count";
     private static final String JSON_KEY_MOVIE_ID = "id";
     private static final String JSON_KEY_MOVIE_TITLE = "title";
     private static final String JSON_KEY_MOVIE_RELEASE_DATE = "release_date";
@@ -146,6 +160,41 @@ public final class MovieDataUtils {
             e.printStackTrace();
         }
         return movieDataList;
+    }
+
+    /**
+     * Builds the {@link ContentValues} Array from the JSON response string.
+     *
+     * @param queryResult The JSON response string from the API.
+     * @return {@link ContentValues} Array. Caller to expect and handle null for the return.
+     */
+    public static ContentValues[] buildContentValuesArrayfromJSONResponse(String queryResult) {
+        try {
+            //validate the response from the server.
+            if (isResponseValid(queryResult)) {
+                JSONObject moviesData = new JSONObject(queryResult);
+                JSONArray jsonArrayResults = moviesData.getJSONArray(JSON_KEY_ARRAY_RESULTS);
+                if (jsonArrayResults != null) {
+                    ContentValues[] contentValuesArray = new ContentValues[jsonArrayResults.length()];
+                    for (int i = 0; i < jsonArrayResults.length(); i++) {
+                        JSONObject data = (JSONObject) jsonArrayResults.get(i);
+                        ContentValues cv = new ContentValues();
+                        cv.put(MoviesEntry.MOVIE_ID, data.getInt(JSON_KEY_MOVIE_ID));
+                        cv.put(MoviesEntry.MOVIE_TITLE, data.getString(JSON_KEY_MOVIE_TITLE));
+                        cv.put(MoviesEntry.MOVIE_POSTER_PATH, data.getString(JSON_KEY_MOVIE_POSTER_PATH));
+                        cv.put(MoviesEntry.MOVIE_OVERVIEW, data.getString(JSON_KEY_MOVIE_OVERVIEW));
+                        cv.put(MoviesEntry.MOVIE_RELEASE_DATE, data.getString(JSON_KEY_MOVIE_RELEASE_DATE));
+                        cv.put(MoviesEntry.MOVIE_VOTE_AVERAGE, data.getDouble(JSON_KEY_MOVIE_VOTE_AVERAGE));
+                        cv.put(MoviesEntry.MOVIE_VOTE_COUNT, data.getInt(JSON_KEY_MOVIE_VOTE_COUNT));
+                        contentValuesArray[i] = cv;
+                    }
+                    return contentValuesArray;
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     /**

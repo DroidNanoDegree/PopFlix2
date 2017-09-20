@@ -15,6 +15,8 @@
 
 package com.sriky.popflix;
 
+import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -38,19 +40,24 @@ class PopularMoviesAdaptor extends RecyclerView.Adapter<PopularMoviesAdaptor.Ima
 
     private static final String TAG = PopularMoviesAdaptor.class.getSimpleName();
 
-    //total number of movie posters that will in the grid layout.
-    private int mNumberOfItems;
+    private final Context mContext;
+    /* cursor to the movies table */
+    private Cursor mCursor;
 
     private MoviePosterOnClickEventListener PopularMoviesAdaptorOnClickListener;
 
-    PopularMoviesAdaptor(int numberOfItems, MoviePosterOnClickEventListener moviePosterOnClickEventListener) {
-        Log.d(TAG, "PopularMoviesAdaptor: numberOfItems = " + numberOfItems);
-        mNumberOfItems = numberOfItems;
+    PopularMoviesAdaptor(Context context, MoviePosterOnClickEventListener moviePosterOnClickEventListener) {
+        mContext = context;
         PopularMoviesAdaptorOnClickListener = moviePosterOnClickEventListener;
     }
 
-    public void updateItemsCount(int newItemsCount){
-        mNumberOfItems = newItemsCount;
+    /**
+     * When there is new data, swap the cursor to the update the UI.
+     *
+     * @param cursor The new cursor.
+     */
+    public void swapCursor(Cursor cursor) {
+        mCursor = cursor;
         notifyDataSetChanged();
     }
 
@@ -64,16 +71,27 @@ class PopularMoviesAdaptor extends RecyclerView.Adapter<PopularMoviesAdaptor.Ima
 
     @Override
     public void onBindViewHolder(ImageViewHolder holder, int position) {
-        holder.bind(position);
+        /* move the cursor to the correct position */
+        mCursor.moveToPosition(position);
+        /* get the information at the current cursor's position */
+        String relativePath = mCursor.getString(MovieDataUtils.INDEX_POSTER_PATH);
+        Uri uri = NetworkUtils.getURLForImageWithRelativePathAndSize(relativePath, MovieDataUtils.getQueryThumbnailWidthPath());
+        holder.mMovieThumbNailView.setTag(mCursor.getInt(MovieDataUtils.INDEX_MOVIE_ID));
+        Picasso.with(mContext)
+                .load(uri)
+                .placeholder(R.drawable.loading)
+                .error(R.drawable.error)
+                .into(holder.mMovieThumbNailView);
     }
 
     @Override
     public int getItemCount() {
-        return mNumberOfItems;
+        if (mCursor == null) return 0;
+        return mCursor.getCount();
     }
 
     interface MoviePosterOnClickEventListener {
-        void onClickedItemAt(int index);
+        void onClickedMovieId(int movieId);
     }
 
     class ImageViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -88,26 +106,12 @@ class PopularMoviesAdaptor extends RecyclerView.Adapter<PopularMoviesAdaptor.Ima
             mMovieThumbNailView.setOnClickListener(this);
         }
 
-        /**
-         * Method to set the poster image from the list of posters.
-         *
-         * @param listIndex Position of the item in the list
-         */
-        void bind(int listIndex) {
-            PopularMoviesActivity popularMoviesActivity = (PopularMoviesActivity) mMovieThumbNailView.getContext();
-            String relativePath = popularMoviesActivity.getImageRelativePathAtIndex(listIndex);
-            Uri uri = NetworkUtils.getURLForImageWithRelativePathAndSize(relativePath, MovieDataUtils.getQueryThumbnailWidthPath());
-            Picasso.with(popularMoviesActivity)
-                    .load(uri)
-                    .placeholder(R.drawable.loading)
-                    .error(R.drawable.error)
-                    .into(mMovieThumbNailView);
-        }
-
         @Override
         public void onClick(View v) {
             Log.d(TAG, "onClick()");
-            PopularMoviesAdaptorOnClickListener.onClickedItemAt(getAdapterPosition());
+            /* retrieve the movie id we set as the tag in onBindViewHolder */
+            PopularMoviesAdaptorOnClickListener.onClickedMovieId(
+                    (int) v.getTag());
         }
     }
 }

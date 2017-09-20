@@ -34,6 +34,7 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
+import com.sriky.popflix.loaders.FetchMovieDataTaskLoader;
 import com.sriky.popflix.utilities.MovieDataUtils;
 import com.sriky.popflix.utilities.NetworkUtils;
 
@@ -168,7 +169,7 @@ public class MovieDetailActivity extends AppCompatActivity
 
     @Override
     public Loader<String> onCreateLoader(int id, Bundle args) {
-        Log.d(TAG, "onCreateLoader: id = "+id);
+        Log.d(TAG, "onCreateLoader: id = " + id);
         return new FetchMovieDataTaskLoader(this, args);
     }
 

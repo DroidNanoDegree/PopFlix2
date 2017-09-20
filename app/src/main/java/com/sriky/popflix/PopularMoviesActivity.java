@@ -17,9 +17,12 @@ package com.sriky.popflix;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.preference.PreferenceManager;
 import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -31,11 +34,11 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.sriky.popflix.data.MoviesContract;
+import com.sriky.popflix.loaders.FetchMovieDataTaskLoader;
 import com.sriky.popflix.settings.SettingsActivity;
+import com.sriky.popflix.sync.MovieDataSyncUtils;
 import com.sriky.popflix.utilities.MovieDataUtils;
-import com.sriky.popflix.utilities.NetworkUtils;
-
-import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -47,10 +50,16 @@ import butterknife.ButterKnife;
 public class PopularMoviesActivity extends AppCompatActivity
         implements SharedPreferences.OnSharedPreferenceChangeListener,
         PopularMoviesAdaptor.MoviePosterOnClickEventListener,
-        LoaderManager.LoaderCallbacks<String>,
+        LoaderManager.LoaderCallbacks<Cursor>,
         FetchMovieDataTaskLoader.FetchMovieDataTaskListener {
 
     private static final String TAG = PopularMoviesActivity.class.getSimpleName();
+
+    /* the amount time to wait prior to displaying an error message if data isn't loader by the
+     * time(millis) specified here.
+     */
+    private static final long DATA_LOAD_TIMEOUT_LIMIT = 30000;
+    private static final long COUNT_DOWN_INTERVAL = 1000;
 
     /*
      * Handle to the RecyclerView to aid in reset the list when user toggles btw
@@ -68,14 +77,14 @@ public class PopularMoviesActivity extends AppCompatActivity
     //handle to the adaptor instance.
     private PopularMoviesAdaptor mPopularMoviesAdaptor;
 
-    //list to hold the downloaded movie data.
-    private ArrayList<MovieData> mMovieDataArrayList;
-
-    //query parameter for sorting ordering.
-    private String mSortingOrder;
-
     //bool to keep track of change in preferences to display sort order for the movies.
     private boolean mDisplaySortingOrderChanged;
+
+    /* recyclerView position */
+    private int mPosition = RecyclerView.NO_POSITION;
+
+    /* CountDownTimer used to issue a timeout when data doesn't load within the specified time. */
+    private CountDownTimer mDataFetchTimer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,31 +92,30 @@ public class PopularMoviesActivity extends AppCompatActivity
         setContentView(R.layout.activity_popular_movies);
         ButterKnife.bind(this);
 
-        mMovieDataArrayList = new ArrayList<>();
-
         mMoviePostersRecyclerView.setHasFixedSize(true);
 
-        mPopularMoviesAdaptor = new PopularMoviesAdaptor(getNumberOfItems(), this);
+        mPopularMoviesAdaptor = new PopularMoviesAdaptor(this, this);
         mMoviePostersRecyclerView.setAdapter(mPopularMoviesAdaptor);
 
         showProgressBarAndHideErrorMessage();
 
         setSortingOrderFromSharedPreferences();
 
-        //trigger the asynctaskloader to download movie data.
-        //The following call will initialize a new loader if one doesn't exist.
-        //If an old loader exist and has loaded the data, then onLoadFinished() will be triggered.
+        /* trigger the asynctaskloader to download movie data.
+         * The following call will initialize a new loader if one doesn't exist.
+         * If an old loader exist and has loaded the data, then onLoadFinished() will be triggered.*/
         getSupportLoaderManager().initLoader(MovieDataUtils.BASIC_MOVIE_DATA_LOADER_ID,
-                getBundleForLoader(), PopularMoviesActivity.this);
+                null, PopularMoviesActivity.this);
+
+        /* initialize the sync service if it isn't running already */
+        MovieDataSyncUtils.initialize(this);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        if(mDisplaySortingOrderChanged){
-            mMovieDataArrayList.clear();
-            getSupportLoaderManager().restartLoader(MovieDataUtils.BASIC_MOVIE_DATA_LOADER_ID,
-                    getBundleForLoader(), PopularMoviesActivity.this);
+        if (mDisplaySortingOrderChanged) {
+            MovieDataSyncUtils.fetchDataImmediately(PopularMoviesActivity.this);
             mDisplaySortingOrderChanged = false;
         }
     }
@@ -132,18 +140,15 @@ public class PopularMoviesActivity extends AppCompatActivity
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if (key.equals(getString(R.string.sort_order_key))) {
-            mSortingOrder = sharedPreferences.getString(key, getString(R.string.default_sort_order));
-            Log.d(TAG, "onSharedPreferenceChanged: mSortingOrder = " + mSortingOrder);
             mDisplaySortingOrderChanged = true;
         }
     }
 
     @Override
-    public void onClickedItemAt(int index) {
+    public void onClickedMovieId(int movieId) {
         try {
             Intent intent = new Intent(this, MovieDetailActivity.class);
-            intent.putExtra(MovieDataUtils.MOVIE_ID_INTENT_EXTRA_KEY,
-                    mMovieDataArrayList.get(index).getMovieID());
+            intent.putExtra(MovieDataUtils.MOVIE_ID_INTENT_EXTRA_KEY, Integer.toString(movieId));
             startActivity(intent);
         } catch (ArrayIndexOutOfBoundsException e) {
             e.printStackTrace();
@@ -164,39 +169,77 @@ public class PopularMoviesActivity extends AppCompatActivity
         showProgressBarAndHideErrorMessage();
     }
 
-
+    /**
+     * Called by {@link LoaderManager} when new loader needs to be created.
+     *
+     * @param id   The ID of the loader that needs to start.
+     * @param args The bundle containing data for the loader.
+     * @return CursorLoader pointing to the movies table.
+     */
     @Override
-    public Loader<String> onCreateLoader(int id, Bundle args) {
-        Log.d(TAG, "onCreateLoader: id = "+id);
-        return new FetchMovieDataTaskLoader(this, args);
-    }
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        Log.d(TAG, "onCreateLoader: id = " + id);
 
-    @Override
-    public void onLoadFinished(Loader<String> loader, String data) {
-        if (data != null) {
-            Log.d(TAG, "onLoadFinished: data.length() = " + data.length());
-            mMovieDataArrayList.addAll(MovieDataUtils.getListfromJSONResponse(data));
-            onDataLoadComplete();
-        } else {
-            onDataLoadFailed();
+        switch (id) {
+            case MovieDataUtils.BASIC_MOVIE_DATA_LOADER_ID: {
+                return new CursorLoader(this,
+                        MoviesContract.MoviesEntry.CONTENT_URI,
+                        MovieDataUtils.MOVIE_DATA_PROJECTION,
+                        null,
+                        null,
+                        null);
+            }
+
+            default:
+                throw new RuntimeException("Loader not implemented id:" + id);
+
         }
     }
 
+    /**
+     * This call is triggered when the CursorLoader loads data from the database or when the
+     * data in the database gets updated.
+     *
+     * @param loader The cursor loader.
+     * @param data   The cursor to the movies tables.
+     */
     @Override
-    public void onLoaderReset(Loader<String> loader) {
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        Log.d(TAG, "onLoadFinished: data.length() = " + data.getCount());
+        mPopularMoviesAdaptor.swapCursor(data);
+        if (mPosition == RecyclerView.NO_POSITION) mPosition = 0;
+        mMoviePostersRecyclerView.smoothScrollToPosition(mPosition);
+        if (data.getCount() > 0) {
+            onDataLoadComplete();
+        } else {
+            /* will there is no data set up a countdown to display an error message in case
+             * the data doesn't load in the specified time.
+             */
+            mDataFetchTimer = new CountDownTimer(DATA_LOAD_TIMEOUT_LIMIT, COUNT_DOWN_INTERVAL) {
 
+                public void onTick(long millisUntilFinished) {
+                    Log.i(TAG, "waiting on data " + millisUntilFinished / COUNT_DOWN_INTERVAL +
+                            "secs remaining for timeout:!");
+                }
+
+                public void onFinish() {
+                    onDataLoadFailed();
+                }
+            };
+            mDataFetchTimer.start();
+        }
     }
 
     /**
-     * Generates a bundle with the query URL.
-     * @return Bundle with query URL.
+     * Called when a previously created loader is being reset, and thus making its data unavailable.
+     * The application should at this point remove any references it has to the Loader's data.
+     *
+     * @param loader The Loader that is being reset.
      */
-    private Bundle getBundleForLoader() {
-        Bundle bundleForLoader = new Bundle();
-        bundleForLoader.putString(MovieDataUtils.FETCH_MOVIE_DATA_URL_KEY,
-                NetworkUtils.buildURL(mSortingOrder, MovieDataUtils.TMDB_API_KEY).toString());
-
-        return bundleForLoader;
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        /* since the loader data is invalid we should clear the adaptor that is pointing to that data */
+        mPopularMoviesAdaptor.swapCursor(null);
     }
 
     /**
@@ -205,8 +248,6 @@ public class PopularMoviesActivity extends AppCompatActivity
      */
     private void setSortingOrderFromSharedPreferences() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        mSortingOrder = sharedPreferences.getString(getString(R.string.sort_order_key), getString(R.string.default_sort_order));
-        Log.d(TAG, "setSortingOrderFromSharedPreferences: sortingOrder = " + mSortingOrder);
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
     }
 
@@ -227,15 +268,18 @@ public class PopularMoviesActivity extends AppCompatActivity
     }
 
     /**
-     * On successfully downloading data from TMDB
-     * a new instance of PopularMoviesAdaptor is created based on the number of items
-     * in the mMovieDataArrayList.
-     * The new instance of PopularMoviesAdaptor is set to the mMoviePostersRecyclerView.
+     * On successfully downloading data from the API
      */
     private void onDataLoadComplete() {
         Log.d(TAG, "onDataLoadComplete()");
-        mProgressBar.setVisibility(View.INVISIBLE);//hide the progress bar.
-        mPopularMoviesAdaptor.updateItemsCount(getNumberOfItems());
+        /* hide the progress bar & the error msg view. */
+        mProgressBar.setVisibility(View.INVISIBLE);
+        mErrorMessageTextView.setVisibility(View.INVISIBLE);
+        /* if the timer was running then cancel it. */
+        if (mDataFetchTimer != null) {
+            mDataFetchTimer.cancel();
+            mDataFetchTimer = null;
+        }
     }
 
     /**
@@ -245,25 +289,5 @@ public class PopularMoviesActivity extends AppCompatActivity
     private void onDataLoadFailed() {
         Log.d(TAG, "onDataLoadFailed()");
         hideProgressBarAndShowErrorMessage();
-    }
-
-    /**
-     * Gets the relative image path from TMDB for a specific index.
-     *
-     * @param index of the image.
-     * @return relative path.
-     * @throws ArrayIndexOutOfBoundsException when the index is out of bounds.
-     */
-    public String getImageRelativePathAtIndex(int index) throws ArrayIndexOutOfBoundsException {
-        return mMovieDataArrayList.get(index).getPosterPath();
-    }
-
-    /**
-     * Get the size of elements downloaded from TMDB.
-     *
-     * @return total number of the elements available to be displayed.
-     */
-    public int getNumberOfItems() {
-        return mMovieDataArrayList.size();
     }
 }
