@@ -18,6 +18,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    dataBinding.enabled = true;
+
     buildTypes.each{
         it.buildConfigField "String", 'TMDB_API_KEY', getMyApiKey("tmdb_api_key")
     }

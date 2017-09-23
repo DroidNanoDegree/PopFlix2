@@ -19,8 +19,8 @@ import android.content.ContentValues;
 import android.util.Log;
 
 import com.sriky.popflix.BuildConfig;
-import com.sriky.popflix.MovieData;
 import com.sriky.popflix.data.MoviesContract.MoviesEntry;
+import com.sriky.popflix.parcelables.MovieTrailer;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -41,7 +41,6 @@ public final class MovieDataUtils {
     public static final int DETAIL_MOVIE_DATA_LOADER_ID = BASIC_MOVIE_DATA_LOADER_ID + 1;
 
     //URL keys for sending and retrieving urls with the "FetchMovieDataTaskLoader".
-    public static final String BUNDLE_KEY_MOVIE_URL = "bundle_extra_movie_data_url";
     public static final String FETCH_MOVIE_DATA_URL_KEY = "fetch_movie_data_url";
 
     /* project array used to query data from movies table. */
@@ -60,11 +59,15 @@ public final class MovieDataUtils {
     private static final String JSON_KEY_ARRAY_RESULTS = "results";
     private static final String JSON_KEY_MOVIE_POSTER_PATH = "poster_path";
     private static final String JSON_KEY_MOVIE_OVERVIEW = "overview";
-    private static final String JSON_KEY_MOVIE_VOTE_COUNT = "vote_average";
-    private static final String JSON_KEY_MOVIE_VOTE_AVERAGE = "vote_count";
+    private static final String JSON_KEY_MOVIE_VOTE_COUNT = "vote_count";
+    private static final String JSON_KEY_MOVIE_VOTE_AVERAGE = "vote_average";
     private static final String JSON_KEY_MOVIE_ID = "id";
     private static final String JSON_KEY_MOVIE_TITLE = "title";
     private static final String JSON_KEY_MOVIE_RELEASE_DATE = "release_date";
+    private static final String JSON_KEY_MOVIE_VIDEO_ID = "id";
+    private static final String JSON_KEY_MOVIE_VIDEO_KEY = "key";
+    private static final String JSON_KEY_MOVIE_VIDEO_NAME = "name";
+    private static final String JSON_KEY_MOVIE_VIDEO_SITE = "site";
     private static final String JSON_KEY_STATUS_MESSAGE = "status_message";
     private static final String JSON_KEY_STATUS_CODE = "status_code";
 
@@ -107,59 +110,33 @@ public final class MovieDataUtils {
     }
 
     /**
-     * This method will generate a MovieData object from the response json after querying TMDB API
-     * for a particular movie's details.
-     *
-     * @param queryResult movie details response from TMDB API for a particular movie.
-     * @return MovieData object from response JSON string.
+     * Generates an ArrayList of MovieTrailer objects from the responseJSON from the API.
+     * @param responseJSON The JSON response from the API.
+     * @return Array List of MovieTrailer objects.
      */
-    public static MovieData getMovieDataFrom(String queryResult) {
-        MovieData movieData = new MovieData();
+    public static ArrayList<MovieTrailer> getMovieTrailers(String responseJSON) {
+        ArrayList<MovieTrailer> movieTrailers = new ArrayList<>();
         try {
             //validate the response from the server.
-            if (isResponseValid(queryResult)) {
-                JSONObject movieDetails = new JSONObject(queryResult);
-                movieData.setPosterPath(movieDetails.getString(JSON_KEY_MOVIE_POSTER_PATH));
-                movieData.setOverview(movieDetails.getString(JSON_KEY_MOVIE_OVERVIEW));
-                movieData.setTitle(movieDetails.getString(JSON_KEY_MOVIE_TITLE));
-                movieData.setReleaseDate(movieDetails.getString(JSON_KEY_MOVIE_RELEASE_DATE));
-                movieData.setVoteAverage(movieDetails.getString(JSON_KEY_MOVIE_VOTE_AVERAGE));
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return movieData;
-    }
-
-    /**
-     * Generates a list of MovieData objects from the response json, after querying TMDB API
-     * for movies organised in a specific order(eg: "popular" or "top_rated".
-     *
-     * @param queryResult response json, after querying TMDB API
-     *                    for movies organised in a specific order(eg: "popular" or "top_rated".
-     * @return ArrayList of MovieData objects.
-     */
-    public static ArrayList<MovieData> getListfromJSONResponse(String queryResult) {
-        ArrayList<MovieData> movieDataList = new ArrayList<>();
-        try {
-            //validate the response from the server.
-            if (isResponseValid(queryResult)) {
-                JSONObject moviesData = new JSONObject(queryResult);
+            if (isResponseValid(responseJSON)) {
+                JSONObject moviesData = new JSONObject(responseJSON);
                 JSONArray jsonArrayResults = moviesData.getJSONArray(JSON_KEY_ARRAY_RESULTS);
                 if (jsonArrayResults != null) {
                     for (int i = 0; i < jsonArrayResults.length(); i++) {
                         JSONObject data = (JSONObject) jsonArrayResults.get(i);
-                        MovieData movieData = new MovieData();
-                        movieData.setPosterPath(data.getString(JSON_KEY_MOVIE_POSTER_PATH));
-                        movieData.setMovieID(data.getString(JSON_KEY_MOVIE_ID));
-                        movieDataList.add(movieData);
+                        MovieTrailer movieTrailer = new MovieTrailer(
+                                data.getString(JSON_KEY_MOVIE_VIDEO_ID),
+                                data.getString(JSON_KEY_MOVIE_VIDEO_KEY),
+                                data.getString(JSON_KEY_MOVIE_VIDEO_NAME),
+                                data.getString(JSON_KEY_MOVIE_VIDEO_SITE));
+                        movieTrailers.add(movieTrailer);
                     }
                 }
             }
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        return movieDataList;
+        return movieTrailers;
     }
 
     /**
@@ -210,7 +187,8 @@ public final class MovieDataUtils {
             JSONObject responseObject = new JSONObject(response);
             String statusCode = responseObject.getString(JSON_KEY_STATUS_CODE);
             String statusMsg = responseObject.getString(JSON_KEY_STATUS_MESSAGE);
-            Log.e(TAG, "isResponseValid: Bad Response from server, where status code = " + statusCode + ", status message = " + statusMsg);
+            Log.e(TAG, "isResponseValid: Bad Response from server, where status code = "
+                    + statusCode + ", status message = " + statusMsg);
             return false;
         }
         return true;

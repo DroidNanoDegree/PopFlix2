@@ -16,8 +16,11 @@
 package com.sriky.popflix;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.databinding.DataBindingUtil;
 import android.graphics.Point;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.NavUtils;
@@ -28,61 +31,56 @@ import android.util.Log;
 import android.view.Display;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.RatingBar;
-import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
+import com.sriky.popflix.data.MoviesContract.MoviesEntry;
+import com.sriky.popflix.databinding.ActivityMovieDetailBinding;
 import com.sriky.popflix.loaders.FetchMovieDataTaskLoader;
+import com.sriky.popflix.parcelables.MovieTrailer;
 import com.sriky.popflix.utilities.MovieDataUtils;
 import com.sriky.popflix.utilities.NetworkUtils;
 
 import java.net.URL;
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
+import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 public class MovieDetailActivity extends AppCompatActivity
         implements LoaderManager.LoaderCallbacks<String>,
         FetchMovieDataTaskLoader.FetchMovieDataTaskListener {
 
     private static final String TAG = MovieDetailActivity.class.getSimpleName();
-    private static final String PARCEL_KEY = "movie_data";
 
-    @BindView(R.id.pb_details_activity)
-    ProgressBar mProgressBar;
+    /* the projection array used to query data from the movies tables */
+    private static final String[] MOVIE_DETAILS_PROJECTION = {
+            MoviesEntry.MOVIE_TITLE,
+            MoviesEntry.MOVIE_RELEASE_DATE,
+            MoviesEntry.MOVIE_VOTE_AVERAGE,
+            MoviesEntry.MOVIE_POSTER_PATH,
+            MoviesEntry.MOVIE_OVERVIEW};
 
-    @BindView(R.id.tv_details_activity_error_msg)
-    TextView mErrorMessageTextView;
+    /* indexes to access the data from the cursor for the projection defined above */
+    private static final int INDEX_MOVIE_TITLE = 0;
+    private static final int INDEX_MOVIE_RELEASE_DATE = 1;
+    private static final int INDEX_MOVIE_VOTE_AVERAGE = 2;
+    private static final int INDEX_MOVIE_POSTER_PATH = 3;
+    private static final int INDEX_MOVIE_OVERVIEW = 4;
 
-    @BindView(R.id.iv_details_thumbnail)
-    ImageView mMoviePosterImageView;
+    private ArrayList<MovieTrailer> mMovieTrailersList;
 
-    @BindView(R.id.tv_movie_title)
-    TextView mMovieTitleTextView;
-
-    @BindView(R.id.tv_release_date)
-    TextView mReleaseDateTextView;
-
-    @BindView(R.id.tv_overview)
-    TextView mOverviewTextView;
-
-    @BindView(R.id.rb_ratings)
-    RatingBar mRatingsBar;
-
-    private MovieData mMovieData;
+    private ActivityMovieDetailBinding mMovieDetailBinding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate()");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_detail);
-        ButterKnife.bind(this);
 
-        mErrorMessageTextView.setText(getString(R.string.data_download_error));
+        mMovieDetailBinding = DataBindingUtil.setContentView(this, R.layout.activity_movie_detail);
 
-        setMoviePosterImageHeight();
+        mMovieDetailBinding.tvErrorMsg.setText(
+                getString(R.string.data_download_error));
+
+        //setMoviePosterImageHeight();
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -91,16 +89,82 @@ public class MovieDetailActivity extends AppCompatActivity
 
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra(MovieDataUtils.MOVIE_ID_INTENT_EXTRA_KEY)) {
-            String movieID = intent.getStringExtra(MovieDataUtils.MOVIE_ID_INTENT_EXTRA_KEY);
-            URL url = NetworkUtils.buildURL(movieID, MovieDataUtils.TMDB_API_KEY);
+            /* get the movie ID from the intent passed by PopularMoviesActivity */
+            final String movieID = intent.getStringExtra(MovieDataUtils.MOVIE_ID_INTENT_EXTRA_KEY);
+            URL url = NetworkUtils.buildVidesURL(movieID, MovieDataUtils.TMDB_API_KEY);
             Bundle loaderBundle = new Bundle();
             loaderBundle.putString(MovieDataUtils.FETCH_MOVIE_DATA_URL_KEY, url.toString());
-            //trigger the asynctaskloader to download movie data.
-            //The following call will initialize a new loader if one doesn't exist.
-            //If an old loader exist and has loaded the data, then onLoadFinished() will be triggered.
+
+            /* trigger the FetchMovieDataTaskLoader to download movie data.
+             * The following call will initialize a new loader if one doesn't exist.
+             * If an old loader exist and has loaded the data, then onLoadFinished() will be triggered. */
             getSupportLoaderManager().initLoader(MovieDataUtils.DETAIL_MOVIE_DATA_LOADER_ID,
                     loaderBundle, MovieDetailActivity.this);
+
+            /* query the local database for the movie records using the movie id. */
+            new AsyncTask<Void, Void, Cursor>() {
+
+                @Override
+                protected Cursor doInBackground(Void... voids) {
+                    return getContentResolver().query(
+                            MoviesEntry.CONTENT_URI.buildUpon().appendPath(movieID).build(),
+                            MOVIE_DETAILS_PROJECTION,
+                            null,
+                            null,
+                            null);
+                }
+
+                @Override
+                protected void onPostExecute(Cursor cursor) {
+                    bindViews(cursor);
+                }
+            }.execute();
         }
+    }
+
+    /**
+     * Binds the views in this activity with the data from the cursor.
+     * @param cursor
+     */
+    private void bindViews(Cursor cursor) {
+        Log.d(TAG, "bindViews: cursor count:" + cursor.getCount());
+
+        /* move the cursor to the correct position */
+        cursor.moveToFirst();
+
+        /* set the movie title
+        * TODO: a11y support */
+        mMovieDetailBinding.tvMovieTitle.setText(cursor.getString(INDEX_MOVIE_TITLE));
+
+        /* set thumbnail
+         * TODO: a11y support
+         */
+        String relativePath = cursor.getString(INDEX_MOVIE_POSTER_PATH);
+        Uri uri = NetworkUtils.getURLForImageWithRelativePathAndSize(relativePath,
+                MovieDataUtils.getQueryThumbnailWidthPath());
+        Picasso.with(this)
+                .load(uri)
+                .placeholder(R.drawable.loading)
+                .error(R.drawable.error)
+                .into(mMovieDetailBinding.thumbnailWithDetails.thumbnailView);
+
+        /* set release date
+         * TODO: a11y support
+         */
+        String formattedYear = cursor.getString(INDEX_MOVIE_RELEASE_DATE);
+        formattedYear = formattedYear.substring(0, formattedYear.indexOf("-"));
+        mMovieDetailBinding.thumbnailWithDetails.tvDate.setText(formattedYear);
+
+        /* set ratings
+         * TODO: a11y support
+         */
+        double ratings = cursor.getDouble(INDEX_MOVIE_VOTE_AVERAGE);
+        Log.d(TAG, "bindViews: ratings: " + ratings);
+        mMovieDetailBinding.thumbnailWithDetails.tvRatings.setText(
+                String.format(getString(R.string.format_ratings), ratings));
+
+        /* overview */
+        mMovieDetailBinding.tvOverview.setText(cursor.getString(INDEX_MOVIE_OVERVIEW));
     }
 
     /**
@@ -110,7 +174,7 @@ public class MovieDetailActivity extends AppCompatActivity
         Display display = getWindowManager().getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
-        mMoviePosterImageView.getLayoutParams().height = size.y / 2;
+        mMovieDetailBinding.thumbnailWithDetails.thumbnailView.getLayoutParams().height = size.y / 2;
     }
 
     /**
@@ -118,37 +182,22 @@ public class MovieDetailActivity extends AppCompatActivity
      */
     private void onDownloadSuccess() {
         //hide the progress bar.
-        mProgressBar.setVisibility(View.INVISIBLE);
+        mMovieDetailBinding.progressBar.setVisibility(View.INVISIBLE);
         //hide error msg tv.
-        mErrorMessageTextView.setVisibility(View.INVISIBLE);
+        mMovieDetailBinding.tvErrorMsg.setVisibility(View.INVISIBLE);
 
-        String relativePath = mMovieData.getPosterPath();
-        Uri uri = NetworkUtils.getURLForImageWithRelativePathAndSize(relativePath,
-                MovieDataUtils.getQueryThumbnailWidthPath());
-        Picasso.with(this)
-                .load(uri)
-                .placeholder(R.drawable.loading)
-                .error(R.drawable.error)
-                .into(mMoviePosterImageView);
+        for (MovieTrailer movieTrailer : mMovieTrailersList) {
+            //m
 
-        mReleaseDateTextView.setText(mMovieData.getReleaseDate());
-        mOverviewTextView.setText(mMovieData.getOverview());
-        mMovieTitleTextView.setText(mMovieData.getTitle());
-        try {
-            float ratings = Float.parseFloat(mMovieData.getVoteAverage()) / 2;
-            mRatingsBar.setRating(ratings);
-        } catch (NumberFormatException e) {
-            //hide the ratings bar if there was an exception.
-            mRatingsBar.setVisibility(View.INVISIBLE);
-            e.printStackTrace();
         }
+
     }
 
     private void onFetchFailed() {
         Log.d(TAG, "onFetchFailed()");
         //hide the progress bar.
-        mProgressBar.setVisibility(View.INVISIBLE);
-        mErrorMessageTextView.setVisibility(View.VISIBLE);
+        mMovieDetailBinding.progressBar.setVisibility(View.INVISIBLE);
+        mMovieDetailBinding.tvErrorMsg.setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -163,7 +212,7 @@ public class MovieDetailActivity extends AppCompatActivity
     public void onPreExecute() {
         Log.d(TAG, "onPreExecute: ()");
         //show the progress bar.
-        mProgressBar.setVisibility(View.VISIBLE);
+        mMovieDetailBinding.progressBar.setVisibility(View.VISIBLE);
     }
 
 
@@ -177,7 +226,7 @@ public class MovieDetailActivity extends AppCompatActivity
     public void onLoadFinished(Loader<String> loader, String data) {
         if (data != null) {
             Log.d(TAG, "onLoadFinished: queryResult.length() = " + data.length());
-            mMovieData = MovieDataUtils.getMovieDataFrom(data);
+            mMovieTrailersList = MovieDataUtils.getMovieTrailers(data);
             onDownloadSuccess();
         } else {
             onFetchFailed();

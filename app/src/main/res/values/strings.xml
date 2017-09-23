@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_name">PopFlix</string>
 
     <!-- activity titles -->
@@ -19,4 +19,15 @@
 
     <string name="pref_sort_order_popular_label">Popular</string>
     <string name="pref_sort_order_top_rated_label">Top Rated</string>
+
+    <!-- Detail Activity -->
+    <string name="label_trailers" >Trailers</string>
+    <string name="reviews_btn_txt">Reviews</string>
+
+    <!-- Ratings formatting n/10 -->
+    <string name="format_ratings">
+        <xliff:g id="ratings">%.1f</xliff:g>/10
+    </string>
+    <string name="movie_Title">Awesome Movie</string>
+
 </resources>
