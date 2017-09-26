@@ -168,31 +168,6 @@ public class MoviesProvider extends ContentProvider {
     }
 
     /**
-     * Returns the supported MIME types(i.e. items and directory) by movie database.
-     *
-     * @param uri The query URI
-     * @return The supported MIME type(i.e. items and directory).
-     */
-    @Nullable
-    @Override
-    public String getType(@NonNull Uri uri) {
-        switch (sUriMatcher.match(uri)) {
-            case CODE_MOVIES: {
-                return "vnd.android.cursor.dir" + "/" + MoviesContract.CONTENT_AUTHORITY + "/" +
-                        MoviesContract.PATH_MOVIES;
-            }
-
-            case CODE_MOVIE_WITH_ID: {
-                return "vnd.android.cursor.item" + "/" + MoviesContract.CONTENT_AUTHORITY + "/" +
-                        MoviesContract.PATH_MOVIES;
-            }
-
-            default:
-                throw new UnsupportedOperationException("Unknown Uri:" + uri);
-        }
-    }
-
-    /**
      * Insert an item into the movies database.
      *
      * @param uri           The URI specifying the the location for the item to be inserted.
@@ -224,6 +199,42 @@ public class MoviesProvider extends ContentProvider {
         }
         getContext().getContentResolver().notifyChange(uri, null);
         return uriToRet;
+    }
+
+    /**
+     * Update the record for a particular item.
+     *
+     * @param uri           The URI specifying the the location for the item to be inserted.
+     * @param contentValues Set of column_name/value pairs to add to the database.
+     *                      This must not be {@code null}.
+     * @param s             A selection criteria to apply when filtering rows.
+     * @param strings       You may include ?s in selection, which will be replaced by
+     *                      the values from selectionArgs, in order that they appear in the
+     *                      selection.
+     * @return The row ID of the updated record.
+     */
+    @Override
+    public int update(@NonNull Uri uri, @Nullable ContentValues contentValues,
+                      @Nullable String s, @Nullable String[] strings) {
+        SQLiteDatabase db = mMoviesDbHelper.getWritableDatabase();
+        int id;
+        switch (sUriMatcher.match(uri)) {
+            case CODE_MOVIE_WITH_ID: {
+                 id = db.update(MoviesEntry.TABLE_NAME,
+                        contentValues,
+                        MoviesEntry.MOVIE_ID + " =? ",
+                        new String[]{uri.getLastPathSegment()});
+                if(id == -1){
+                    throw new android.database.SQLException("Failed to update row " + uri);
+                }
+                break;
+            }
+
+            default:
+                throw new UnsupportedOperationException("Unknown URI:" + uri);
+        }
+        getContext().getContentResolver().notifyChange(uri, null);
+        return id;
     }
 
     /**
@@ -272,26 +283,35 @@ public class MoviesProvider extends ContentProvider {
         return numOfItemsDeleted;
     }
 
+    /**
+     * Returns the supported MIME types(i.e. items and directory) by movie database.
+     *
+     * @param uri The query URI
+     * @return The supported MIME type(i.e. items and directory).
+     */
+    @Nullable
+    @Override
+    public String getType(@NonNull Uri uri) {
+        switch (sUriMatcher.match(uri)) {
+            case CODE_MOVIES: {
+                return "vnd.android.cursor.dir" + "/" + MoviesContract.CONTENT_AUTHORITY + "/" +
+                        MoviesContract.PATH_MOVIES;
+            }
+
+            case CODE_MOVIE_WITH_ID: {
+                return "vnd.android.cursor.item" + "/" + MoviesContract.CONTENT_AUTHORITY + "/" +
+                        MoviesContract.PATH_MOVIES;
+            }
+
+            default:
+                throw new UnsupportedOperationException("Unknown Uri:" + uri);
+        }
+    }
 
     @Override
     public void shutdown() {
         /* Always close the DB helper */
         mMoviesDbHelper.close();
         super.shutdown();
-    }
-
-    /**
-     * TODO: Implementation pending based on the need. Currently, there is no use case for this method.
-     *
-     * @param uri
-     * @param contentValues
-     * @param s
-     * @param strings
-     * @return
-     */
-    @Override
-    public int update(@NonNull Uri uri, @Nullable ContentValues contentValues,
-                      @Nullable String s, @Nullable String[] strings) {
-        return 0;
     }
 }
