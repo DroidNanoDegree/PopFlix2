@@ -15,10 +15,11 @@
 
 package com.sriky.popflix;
 
+import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.databinding.DataBindingUtil;
-import android.graphics.Point;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -27,10 +28,13 @@ import android.support.v4.app.NavUtils;
 import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.util.Log;
-import android.view.Display;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 import com.sriky.popflix.data.MoviesContract.MoviesEntry;
@@ -42,11 +46,11 @@ import com.sriky.popflix.utilities.NetworkUtils;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.StringTokenizer;
 
 public class MovieDetailActivity extends AppCompatActivity
         implements LoaderManager.LoaderCallbacks<String>,
-        FetchMovieDataTaskLoader.FetchMovieDataTaskListener {
+        FetchMovieDataTaskLoader.FetchMovieDataTaskListener,
+        MovieTrailerAdaptor.MovieTrailerOnClickedListener {
 
     private static final String TAG = MovieDetailActivity.class.getSimpleName();
 
@@ -56,7 +60,8 @@ public class MovieDetailActivity extends AppCompatActivity
             MoviesEntry.MOVIE_RELEASE_DATE,
             MoviesEntry.MOVIE_VOTE_AVERAGE,
             MoviesEntry.MOVIE_POSTER_PATH,
-            MoviesEntry.MOVIE_OVERVIEW};
+            MoviesEntry.MOVIE_OVERVIEW,
+            MoviesEntry.USER_FAVOURITE};
 
     /* indexes to access the data from the cursor for the projection defined above */
     private static final int INDEX_MOVIE_TITLE = 0;
@@ -64,10 +69,21 @@ public class MovieDetailActivity extends AppCompatActivity
     private static final int INDEX_MOVIE_VOTE_AVERAGE = 2;
     private static final int INDEX_MOVIE_POSTER_PATH = 3;
     private static final int INDEX_MOVIE_OVERVIEW = 4;
+    private static final int INDEX_MOVIE_USER_FAVORITE = 5;
 
     private ArrayList<MovieTrailer> mMovieTrailersList;
 
     private ActivityMovieDetailBinding mMovieDetailBinding;
+
+    private Cursor mCursor;
+
+    private MovieTrailerAdaptor mMovieTrailerAdaptor;
+
+    private String mMovieId;
+
+    private Toast mToast;
+
+    private boolean mFavorite;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,7 +96,12 @@ public class MovieDetailActivity extends AppCompatActivity
         mMovieDetailBinding.tvErrorMsg.setText(
                 getString(R.string.data_download_error));
 
-        //setMoviePosterImageHeight();
+        mMovieDetailBinding.trailers.trailerRecyclerView.setHasFixedSize(true);
+        mMovieDetailBinding.trailers.trailerRecyclerView.setLayoutManager(
+                new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+
+        mMovieTrailerAdaptor = new MovieTrailerAdaptor(this, this);
+        mMovieDetailBinding.trailers.trailerRecyclerView.setAdapter(mMovieTrailerAdaptor);
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -90,8 +111,8 @@ public class MovieDetailActivity extends AppCompatActivity
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra(MovieDataUtils.MOVIE_ID_INTENT_EXTRA_KEY)) {
             /* get the movie ID from the intent passed by PopularMoviesActivity */
-            final String movieID = intent.getStringExtra(MovieDataUtils.MOVIE_ID_INTENT_EXTRA_KEY);
-            URL url = NetworkUtils.buildVidesURL(movieID, MovieDataUtils.TMDB_API_KEY);
+            mMovieId = intent.getStringExtra(MovieDataUtils.MOVIE_ID_INTENT_EXTRA_KEY);
+            URL url = NetworkUtils.buildVidoesURL(mMovieId, MovieDataUtils.TMDB_API_KEY);
             Bundle loaderBundle = new Bundle();
             loaderBundle.putString(MovieDataUtils.FETCH_MOVIE_DATA_URL_KEY, url.toString());
 
@@ -107,7 +128,7 @@ public class MovieDetailActivity extends AppCompatActivity
                 @Override
                 protected Cursor doInBackground(Void... voids) {
                     return getContentResolver().query(
-                            MoviesEntry.CONTENT_URI.buildUpon().appendPath(movieID).build(),
+                            MoviesEntry.CONTENT_URI.buildUpon().appendPath(mMovieId).build(),
                             MOVIE_DETAILS_PROJECTION,
                             null,
                             null,
@@ -116,10 +137,76 @@ public class MovieDetailActivity extends AppCompatActivity
 
                 @Override
                 protected void onPostExecute(Cursor cursor) {
+                    mCursor = cursor;
                     bindViews(cursor);
                 }
             }.execute();
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.details_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        /* set the icon to indicate whether the movie has been favorited by the user or not */
+        if (mCursor != null) {
+            mFavorite = mCursor.getInt(INDEX_MOVIE_USER_FAVORITE) > 0;
+            if(mFavorite) {
+                setIcon(menu.findItem(R.id.action_favorite), R.drawable.favorite_selected);
+            }
+        }
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            NavUtils.navigateUpFromSameTask(this);
+        } else if (item.getItemId() == R.id.action_favorite) {
+            mFavorite = !mFavorite;
+            if (mFavorite) {
+                setIcon(item, R.drawable.favorite_selected);
+            } else {
+                setIcon(item, R.drawable.favorite_normal);
+            }
+            updateRecord();
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * Update the movies table item record to set the boolean.
+     */
+    private void updateRecord() {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MoviesEntry.USER_FAVOURITE, mFavorite);
+        int id = getContentResolver().update(
+                MoviesEntry.CONTENT_URI.buildUpon().appendPath(mMovieId).build(),
+                contentValues,
+                null,
+                null);
+
+        Log.d(TAG, "updateRecord() id =" + id);
+        int formatId =
+                (mFavorite == true) ? R.string.movie_added_to_favorites
+                        : R.string.movie_removed_from_favorites;
+
+        if(mToast != null) {
+            mToast.cancel();
+        }
+        mToast = Toast.makeText(this,
+                String.format(getString(formatId),
+                        mCursor.getString(INDEX_MOVIE_TITLE)), Toast.LENGTH_SHORT);
+        mToast.show();
+    }
+
+    private void setIcon(MenuItem item, int resourceId){
+        item.setIcon(resourceId);
     }
 
     /**
@@ -134,7 +221,9 @@ public class MovieDetailActivity extends AppCompatActivity
 
         /* set the movie title
         * TODO: a11y support */
-        mMovieDetailBinding.tvMovieTitle.setText(cursor.getString(INDEX_MOVIE_TITLE));
+        String title = cursor.getString(INDEX_MOVIE_TITLE);
+        //mMovieDetailBinding.tvMovieTitle.setText(title);
+        setTitle(title);
 
         /* set thumbnail
          * TODO: a11y support
@@ -168,16 +257,6 @@ public class MovieDetailActivity extends AppCompatActivity
     }
 
     /**
-     * Sets the height of the imageview for the movie poster thumbnail to half of the screen height.
-     */
-    private void setMoviePosterImageHeight() {
-        Display display = getWindowManager().getDefaultDisplay();
-        Point size = new Point();
-        display.getSize(size);
-        mMovieDetailBinding.thumbnailWithDetails.thumbnailView.getLayoutParams().height = size.y / 2;
-    }
-
-    /**
      * Method to set appreciate data to all the views once data was downloaded successfully.
      */
     private void onDownloadSuccess() {
@@ -185,12 +264,8 @@ public class MovieDetailActivity extends AppCompatActivity
         mMovieDetailBinding.progressBar.setVisibility(View.INVISIBLE);
         //hide error msg tv.
         mMovieDetailBinding.tvErrorMsg.setVisibility(View.INVISIBLE);
-
-        for (MovieTrailer movieTrailer : mMovieTrailersList) {
-            //m
-
-        }
-
+        /* set the adaptor for the trailers listview */
+        mMovieTrailerAdaptor.updateTrailers(mMovieTrailersList);
     }
 
     private void onFetchFailed() {
@@ -198,14 +273,6 @@ public class MovieDetailActivity extends AppCompatActivity
         //hide the progress bar.
         mMovieDetailBinding.progressBar.setVisibility(View.INVISIBLE);
         mMovieDetailBinding.tvErrorMsg.setVisibility(View.VISIBLE);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            NavUtils.navigateUpFromSameTask(this);
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -235,6 +302,18 @@ public class MovieDetailActivity extends AppCompatActivity
 
     @Override
     public void onLoaderReset(Loader<String> loader) {
+        mMovieTrailerAdaptor.updateTrailers(null);
+    }
 
+    /**
+     * Launch the trailer via youtube app or a browser.
+     * @param trailerKey The video query key.
+     */
+    @Override
+    public void onClicked(String trailerKey) {
+        Intent intent = new Intent(Intent.ACTION_VIEW, NetworkUtils.buildYoutubeUri(trailerKey));
+        if(intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        }
     }
 }

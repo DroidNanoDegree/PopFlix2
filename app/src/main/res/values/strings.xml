@@ -23,11 +23,18 @@
     <!-- Detail Activity -->
     <string name="label_trailers" >Trailers</string>
     <string name="reviews_btn_txt">Reviews</string>
+    <string name="movie_added_to_favorites">
+        <xliff:g id="ratings">%s</xliff:g> added to favorites!
+    </string>
+    <string name="movie_removed_from_favorites">
+        <xliff:g id="ratings">%s</xliff:g> removed from favorites!
+    </string>
 
     <!-- Ratings formatting n/10 -->
     <string name="format_ratings">
         <xliff:g id="ratings">%.1f</xliff:g>/10
     </string>
     <string name="movie_Title">Awesome Movie</string>
+    <string name="action_favorite">Favorite</string>
 
 </resources>
