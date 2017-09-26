@@ -28,10 +28,16 @@ import java.util.Scanner;
  * Helper class(static) to assist in generating URLs and performing API requests.
  */
 public final class NetworkUtils {
+    /* TMDB API */
     private static final String TMDB_BASE_URL = "https://api.themoviedb.org/3/movie";
     private static final String PARAM_QUERY_API_KEP = "api_key";
     /* path to the videos */
     private static final String PATH_VIDEOS = "videos";
+
+    /* youtube */
+    private static final String YOUTUBE_BASE_URL = "https://www.youtube.com";
+    private static final String YOUTUBE_VIDEOS_PATH = "watch";
+    private static final String YOUTUBE_QUERY_PARAM_KEY = "v";
 
     //images
     private static final String TMDA_IMAGE_BASE_URL = "http://image.tmdb.org/t/p";
@@ -69,9 +75,21 @@ public final class NetworkUtils {
      * @param apiKey  API key for TMDB.
      * @return
      */
-    public static URL buildVidesURL(String movieId, String apiKey) {
+    public static URL buildVidoesURL(String movieId, String apiKey) {
         Uri uri = buildUri(apiKey, movieId, PATH_VIDEOS);
         return buildUrl(uri);
+    }
+
+    /**
+     * Builds the youtube Uri for the supplied video key.
+     * @param videoKey The key to the video.
+     * @return Uri to youtube for the video identified by the video key.
+     */
+    public static Uri buildYoutubeUri(String videoKey) {
+        return Uri.parse(YOUTUBE_BASE_URL).buildUpon()
+                .appendPath(YOUTUBE_VIDEOS_PATH)
+                .appendQueryParameter(YOUTUBE_QUERY_PARAM_KEY, videoKey)
+                .build();
     }
 
     /**
