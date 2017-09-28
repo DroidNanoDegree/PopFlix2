@@ -220,11 +220,11 @@ public class MoviesProvider extends ContentProvider {
         int id;
         switch (sUriMatcher.match(uri)) {
             case CODE_MOVIE_WITH_ID: {
-                 id = db.update(MoviesEntry.TABLE_NAME,
+                id = db.update(MoviesEntry.TABLE_NAME,
                         contentValues,
                         MoviesEntry.MOVIE_ID + " =? ",
                         new String[]{uri.getLastPathSegment()});
-                if(id == -1){
+                if (id == -1) {
                     throw new android.database.SQLException("Failed to update row " + uri);
                 }
                 break;

@@ -33,6 +33,7 @@ public class MovieDataFirebaseJobService extends JobService {
 
     /**
      * Starting point for the job. Contains implementation to offload the work onto to another thread.
+     *
      * @return whether there is work remaining.
      */
     @Override
@@ -62,7 +63,7 @@ public class MovieDataFirebaseJobService extends JobService {
      */
     @Override
     public boolean onStopJob(JobParameters job) {
-        if(mfetchMovieDataTask != null) {
+        if (mfetchMovieDataTask != null) {
             mfetchMovieDataTask.cancel(true);
         }
         return true;
