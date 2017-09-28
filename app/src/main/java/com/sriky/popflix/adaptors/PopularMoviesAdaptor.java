@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package com.sriky.popflix;
+package com.sriky.popflix.adaptors;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -26,6 +26,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.squareup.picasso.Picasso;
+import com.sriky.popflix.R;
 import com.sriky.popflix.utilities.MovieDataUtils;
 import com.sriky.popflix.utilities.NetworkUtils;
 
@@ -36,7 +37,7 @@ import butterknife.ButterKnife;
  * Adaptor for the PopularMoviesActivity's grid RecyclerView.
  */
 
-class PopularMoviesAdaptor extends RecyclerView.Adapter<PopularMoviesAdaptor.ImageViewHolder> {
+public class PopularMoviesAdaptor extends RecyclerView.Adapter<PopularMoviesAdaptor.ImageViewHolder> {
 
     private static final String TAG = PopularMoviesAdaptor.class.getSimpleName();
 
@@ -46,7 +47,7 @@ class PopularMoviesAdaptor extends RecyclerView.Adapter<PopularMoviesAdaptor.Ima
 
     private MoviePosterOnClickEventListener PopularMoviesAdaptorOnClickListener;
 
-    PopularMoviesAdaptor(Context context, MoviePosterOnClickEventListener moviePosterOnClickEventListener) {
+    public PopularMoviesAdaptor(Context context, MoviePosterOnClickEventListener moviePosterOnClickEventListener) {
         mContext = context;
         PopularMoviesAdaptorOnClickListener = moviePosterOnClickEventListener;
     }
@@ -90,11 +91,11 @@ class PopularMoviesAdaptor extends RecyclerView.Adapter<PopularMoviesAdaptor.Ima
         return mCursor.getCount();
     }
 
-    interface MoviePosterOnClickEventListener {
+    public interface MoviePosterOnClickEventListener {
         void onClickedMovieId(int movieId);
     }
 
-    class ImageViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public class ImageViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         //will display the image poster/thumbnail.
         @BindView(R.id.iv_movie_thumbnail)

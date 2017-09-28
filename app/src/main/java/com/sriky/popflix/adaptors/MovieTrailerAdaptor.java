@@ -13,20 +13,18 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package com.sriky.popflix;
+package com.sriky.popflix.adaptors;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ImageView;
 
+import com.sriky.popflix.R;
 import com.sriky.popflix.parcelables.MovieTrailer;
 
 import java.util.ArrayList;
@@ -55,9 +53,10 @@ public class MovieTrailerAdaptor extends RecyclerView.Adapter<MovieTrailerAdapto
 
     /**
      * Updates the recycler view with the new items from the ArrayList.
+     *
      * @param trailers ArrayList containing the MovieTrailer objects.
      */
-    public void updateTrailers(ArrayList<MovieTrailer> trailers){
+    public void updateTrailers(ArrayList<MovieTrailer> trailers) {
         mMovieTrailersList = trailers;
         notifyDataSetChanged();
     }
@@ -74,13 +73,13 @@ public class MovieTrailerAdaptor extends RecyclerView.Adapter<MovieTrailerAdapto
     @Override
     public void onBindViewHolder(TrailerImageViewHolder holder, int position) {
         MovieTrailer movieTrailer = mMovieTrailersList.get(position);
-        holder.mTrailerButton.setText(movieTrailer.getName());
-        holder.mTrailerButton.setTag(movieTrailer.getKey());
+        holder.trailerButton.setText(movieTrailer.getName());
+        holder.trailerButton.setTag(movieTrailer.getKey());
     }
 
     @Override
     public int getItemCount() {
-        if(mMovieTrailersList != null) {
+        if (mMovieTrailersList != null) {
             Log.d(TAG, "getCount: " + mMovieTrailersList.size());
             return mMovieTrailersList.size();
         }
@@ -88,19 +87,19 @@ public class MovieTrailerAdaptor extends RecyclerView.Adapter<MovieTrailerAdapto
     }
 
     public class TrailerImageViewHolder extends RecyclerView.ViewHolder
-            implements View.OnClickListener{
+            implements View.OnClickListener {
 
-        public Button mTrailerButton;
+        public Button trailerButton;
 
         public TrailerImageViewHolder(View itemView) {
             super(itemView);
-            mTrailerButton = itemView.findViewById(R.id.btn_trailer);
-            mTrailerButton.setOnClickListener(this);
+            trailerButton = itemView.findViewById(R.id.btn_trailer);
+            trailerButton.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View view) {
-            mMovieTrailerOnClickedListener.onClicked((String)mTrailerButton.getTag());
+            mMovieTrailerOnClickedListener.onClicked((String) trailerButton.getTag());
         }
     }
 }
