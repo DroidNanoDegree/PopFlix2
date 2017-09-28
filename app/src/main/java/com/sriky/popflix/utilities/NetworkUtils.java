@@ -33,6 +33,8 @@ public final class NetworkUtils {
     private static final String PARAM_QUERY_API_KEP = "api_key";
     /* path to the videos */
     private static final String PATH_VIDEOS = "videos";
+    /* path to reviews */
+    private static final String PATH_REVIEWS = "reviews";
 
     /* youtube */
     private static final String YOUTUBE_BASE_URL = "https://www.youtube.com";
@@ -59,8 +61,8 @@ public final class NetworkUtils {
     /**
      * Builds URL for the specified movieId using TMDB base URL.
      *
-     * @param movieId  The movie ID.
-     * @param apiKey   API key for TMDB.
+     * @param movieId The movie ID.
+     * @param apiKey  API key for TMDB.
      * @return URL to query TMBD to get movies in the order specified by movieId param.
      */
     public static URL buildURL(String movieId, String apiKey) {
@@ -73,15 +75,28 @@ public final class NetworkUtils {
      *
      * @param movieId The Movie ID
      * @param apiKey  API key for TMDB.
-     * @return
+     * @return URL to query trailers for the specific movie ID.
      */
-    public static URL buildVidoesURL(String movieId, String apiKey) {
+    public static URL buildVideosURL(String movieId, String apiKey) {
         Uri uri = buildUri(apiKey, movieId, PATH_VIDEOS);
         return buildUrl(uri);
     }
 
     /**
+     * Builds the URL to query API for reviews.
+     *
+     * @param movieId The movie ID for which the reviews.
+     * @param apiKey  API key for TMDB.
+     * @return URL to query reviews for the specific movie ID.
+     */
+    public static URL buildReviewsURL(String movieId, String apiKey) {
+        Uri uri = buildUri(apiKey, movieId, PATH_REVIEWS);
+        return buildUrl(uri);
+    }
+
+    /**
      * Builds the youtube Uri for the supplied video key.
+     *
      * @param videoKey The key to the video.
      * @return Uri to youtube for the video identified by the video key.
      */

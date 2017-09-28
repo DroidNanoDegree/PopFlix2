@@ -17,15 +17,16 @@ package com.sriky.popflix;
 
 import android.content.ContentValues;
 import android.content.Intent;
-import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.databinding.DataBindingUtil;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.NavUtils;
 import android.support.v4.content.Loader;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -37,6 +38,8 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
+import com.sriky.popflix.adaptors.DetailsFragmentPagerAdaptor;
+import com.sriky.popflix.adaptors.MovieTrailerAdaptor;
 import com.sriky.popflix.data.MoviesContract.MoviesEntry;
 import com.sriky.popflix.databinding.ActivityMovieDetailBinding;
 import com.sriky.popflix.loaders.FetchMovieDataTaskLoader;
@@ -61,15 +64,16 @@ public class MovieDetailActivity extends AppCompatActivity
             MoviesEntry.MOVIE_VOTE_AVERAGE,
             MoviesEntry.MOVIE_POSTER_PATH,
             MoviesEntry.MOVIE_OVERVIEW,
-            MoviesEntry.USER_FAVOURITE};
+            MoviesEntry.USER_FAVOURITE
+    };
 
     /* indexes to access the data from the cursor for the projection defined above */
-    private static final int INDEX_MOVIE_TITLE = 0;
-    private static final int INDEX_MOVIE_RELEASE_DATE = 1;
-    private static final int INDEX_MOVIE_VOTE_AVERAGE = 2;
-    private static final int INDEX_MOVIE_POSTER_PATH = 3;
-    private static final int INDEX_MOVIE_OVERVIEW = 4;
-    private static final int INDEX_MOVIE_USER_FAVORITE = 5;
+    public static final int INDEX_MOVIE_TITLE = 0;
+    public static final int INDEX_MOVIE_RELEASE_DATE = 1;
+    public static final int INDEX_MOVIE_VOTE_AVERAGE = 2;
+    public static final int INDEX_MOVIE_POSTER_PATH = 3;
+    public static final int INDEX_MOVIE_OVERVIEW = 4;
+    public static final int INDEX_MOVIE_USER_FAVORITE = 5;
 
     private ArrayList<MovieTrailer> mMovieTrailersList;
 
@@ -112,7 +116,7 @@ public class MovieDetailActivity extends AppCompatActivity
         if (intent != null && intent.hasExtra(MovieDataUtils.MOVIE_ID_INTENT_EXTRA_KEY)) {
             /* get the movie ID from the intent passed by PopularMoviesActivity */
             mMovieId = intent.getStringExtra(MovieDataUtils.MOVIE_ID_INTENT_EXTRA_KEY);
-            URL url = NetworkUtils.buildVidoesURL(mMovieId, MovieDataUtils.TMDB_API_KEY);
+            URL url = NetworkUtils.buildVideosURL(mMovieId, MovieDataUtils.TMDB_API_KEY);
             Bundle loaderBundle = new Bundle();
             loaderBundle.putString(MovieDataUtils.FETCH_MOVIE_DATA_URL_KEY, url.toString());
 
@@ -145,6 +149,12 @@ public class MovieDetailActivity extends AppCompatActivity
     }
 
     @Override
+    protected void onDestroy() {
+        mCursor.close();
+        super.onDestroy();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater menuInflater = getMenuInflater();
         menuInflater.inflate(R.menu.details_menu, menu);
@@ -156,7 +166,7 @@ public class MovieDetailActivity extends AppCompatActivity
         /* set the icon to indicate whether the movie has been favorited by the user or not */
         if (mCursor != null) {
             mFavorite = mCursor.getInt(INDEX_MOVIE_USER_FAVORITE) > 0;
-            if(mFavorite) {
+            if (mFavorite) {
                 setIcon(menu.findItem(R.id.action_favorite), R.drawable.favorite_selected);
             }
         }
@@ -196,7 +206,7 @@ public class MovieDetailActivity extends AppCompatActivity
                 (mFavorite == true) ? R.string.movie_added_to_favorites
                         : R.string.movie_removed_from_favorites;
 
-        if(mToast != null) {
+        if (mToast != null) {
             mToast.cancel();
         }
         mToast = Toast.makeText(this,
@@ -205,12 +215,13 @@ public class MovieDetailActivity extends AppCompatActivity
         mToast.show();
     }
 
-    private void setIcon(MenuItem item, int resourceId){
+    private void setIcon(MenuItem item, int resourceId) {
         item.setIcon(resourceId);
     }
 
     /**
      * Binds the views in this activity with the data from the cursor.
+     *
      * @param cursor
      */
     private void bindViews(Cursor cursor) {
@@ -252,8 +263,55 @@ public class MovieDetailActivity extends AppCompatActivity
         mMovieDetailBinding.thumbnailWithDetails.tvRatings.setText(
                 String.format(getString(R.string.format_ratings), ratings));
 
-        /* overview */
-        mMovieDetailBinding.tvOverview.setText(cursor.getString(INDEX_MOVIE_OVERVIEW));
+        /* set the FragmentPagerAdaptor for the ViewPager used to display overview & reviews */
+        mMovieDetailBinding.overviewReviews.vpOverviewReviews.setAdapter(
+                new DetailsFragmentPagerAdaptor(getSupportFragmentManager(), mCursor, mMovieId));
+
+        /* add the tabbed layout to listen to page change notifications so that the ViewPager
+         * can be updated accordingly
+         */
+        mMovieDetailBinding.overviewReviews.vpOverviewReviews.addOnPageChangeListener(
+                new TabLayout.TabLayoutOnPageChangeListener(
+                        mMovieDetailBinding.overviewReviews.tlOverviewReviews));
+
+        /* update the ViewPager to the appropriate page */
+        mMovieDetailBinding.overviewReviews.tlOverviewReviews.addOnTabSelectedListener(
+                (new TabLayout.OnTabSelectedListener() {
+                    @Override
+                    public void onTabSelected(TabLayout.Tab tab) {
+                        mMovieDetailBinding.overviewReviews.vpOverviewReviews.setCurrentItem(
+                                tab.getPosition());
+                    }
+
+                    @Override
+                    public void onTabUnselected(TabLayout.Tab tab) {
+                    }
+
+                    @Override
+                    public void onTabReselected(TabLayout.Tab tab) {
+                    }
+                }));
+
+        /* update the page index when page changes so that ViewPager can resize according to the
+         * size of the view.
+         */
+        mMovieDetailBinding.overviewReviews.vpOverviewReviews.addOnPageChangeListener(
+                new ViewPager.OnPageChangeListener() {
+                    @Override
+                    public void onPageScrolled(int position, float positionOffset,
+                                               int positionOffsetPixels) {
+                    }
+
+                    @Override
+                    public void onPageSelected(int position) {
+                        mMovieDetailBinding.overviewReviews.vpOverviewReviews.reMeasureCurrentPage(
+                                mMovieDetailBinding.overviewReviews.vpOverviewReviews.getCurrentItem());
+                    }
+
+                    @Override
+                    public void onPageScrollStateChanged(int state) {
+                    }
+                });
     }
 
     /**
@@ -296,7 +354,8 @@ public class MovieDetailActivity extends AppCompatActivity
             mMovieTrailersList = MovieDataUtils.getMovieTrailers(data);
             onDownloadSuccess();
         } else {
-            onFetchFailed();
+            //TODO: Error should be displayed in Trailers layout!
+            //onFetchFailed();
         }
     }
 
@@ -307,12 +366,13 @@ public class MovieDetailActivity extends AppCompatActivity
 
     /**
      * Launch the trailer via youtube app or a browser.
+     *
      * @param trailerKey The video query key.
      */
     @Override
     public void onClicked(String trailerKey) {
         Intent intent = new Intent(Intent.ACTION_VIEW, NetworkUtils.buildYoutubeUri(trailerKey));
-        if(intent.resolveActivity(getPackageManager()) != null) {
+        if (intent.resolveActivity(getPackageManager()) != null) {
             startActivity(intent);
         }
     }

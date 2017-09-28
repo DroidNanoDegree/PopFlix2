@@ -29,6 +29,8 @@
     <string name="movie_removed_from_favorites">
         <xliff:g id="ratings">%s</xliff:g> removed from favorites!
     </string>
+    <string name="overview">Overview</string>
+    <string name="reviews">Reviews</string>
 
     <!-- Ratings formatting n/10 -->
     <string name="format_ratings">

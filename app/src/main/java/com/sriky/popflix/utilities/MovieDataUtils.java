@@ -20,6 +20,7 @@ import android.util.Log;
 
 import com.sriky.popflix.BuildConfig;
 import com.sriky.popflix.data.MoviesContract.MoviesEntry;
+import com.sriky.popflix.parcelables.MovieReview;
 import com.sriky.popflix.parcelables.MovieTrailer;
 
 import org.json.JSONArray;
@@ -39,6 +40,7 @@ public final class MovieDataUtils {
     //async task loader IDs.
     public static final int BASIC_MOVIE_DATA_LOADER_ID = 100;
     public static final int DETAIL_MOVIE_DATA_LOADER_ID = BASIC_MOVIE_DATA_LOADER_ID + 1;
+    public static final int REVIEWS_DATA_LOADER_ID = DETAIL_MOVIE_DATA_LOADER_ID + 1;
 
     //URL keys for sending and retrieving urls with the "FetchMovieDataTaskLoader".
     public static final String FETCH_MOVIE_DATA_URL_KEY = "fetch_movie_data_url";
@@ -68,6 +70,8 @@ public final class MovieDataUtils {
     private static final String JSON_KEY_MOVIE_VIDEO_KEY = "key";
     private static final String JSON_KEY_MOVIE_VIDEO_NAME = "name";
     private static final String JSON_KEY_MOVIE_VIDEO_SITE = "site";
+    private static final String JSON_KEY_MOVIE_REVIEW_AUTHOR = "author";
+    private static final String JSON_KEY_MOVIE_REVIEW_CONTENT = "content";
     private static final String JSON_KEY_STATUS_MESSAGE = "status_message";
     private static final String JSON_KEY_STATUS_CODE = "status_code";
 
@@ -110,9 +114,10 @@ public final class MovieDataUtils {
     }
 
     /**
-     * Generates an ArrayList of MovieTrailer objects from the responseJSON from the API.
+     * Generates an ArrayList of {@link MovieTrailer} objects from the responseJSON from the API.
+     *
      * @param responseJSON The JSON response from the API.
-     * @return Array List of MovieTrailer objects.
+     * @return ArrayList of {@link MovieTrailer} objects.
      */
     public static ArrayList<MovieTrailer> getMovieTrailers(String responseJSON) {
         ArrayList<MovieTrailer> movieTrailers = new ArrayList<>();
@@ -137,6 +142,36 @@ public final class MovieDataUtils {
             e.printStackTrace();
         }
         return movieTrailers;
+    }
+
+    /**
+     * Generates an array list of {@link MovieReview} objects from supplied the JSONResponse string.
+     *
+     * @param responseJSON The JSON response from the API.
+     * @return ArrayList of {@link MovieReview} objects.
+     */
+    public static ArrayList<MovieReview> getMovieReviews(String responseJSON) {
+        ArrayList<MovieReview> movieReviews = new ArrayList<>();
+        try {
+            //validate the response from the server.
+            if (isResponseValid(responseJSON)) {
+                JSONObject moviesData = new JSONObject(responseJSON);
+                JSONArray jsonArrayResults = moviesData.getJSONArray(JSON_KEY_ARRAY_RESULTS);
+                if (jsonArrayResults != null) {
+                    for (int i = 0; i < jsonArrayResults.length(); i++) {
+                        JSONObject data = (JSONObject) jsonArrayResults.get(i);
+                        MovieReview movieReview = new MovieReview(
+                                data.getString(JSON_KEY_MOVIE_VIDEO_ID),
+                                data.getString(JSON_KEY_MOVIE_REVIEW_AUTHOR),
+                                data.getString(JSON_KEY_MOVIE_REVIEW_CONTENT));
+                        movieReviews.add(movieReview);
+                    }
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return movieReviews;
     }
 
     /**
