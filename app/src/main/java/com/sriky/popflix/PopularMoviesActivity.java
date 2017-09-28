@@ -34,6 +34,7 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.sriky.popflix.adaptors.PopularMoviesAdaptor;
 import com.sriky.popflix.data.MoviesContract;
 import com.sriky.popflix.loaders.FetchMovieDataTaskLoader;
 import com.sriky.popflix.settings.SettingsActivity;
