@@ -89,6 +89,8 @@ public class MovieDetailActivity extends AppCompatActivity
 
     private boolean mFavorite;
 
+    private DetailsFragmentPagerAdaptor mDetailsFragmentPagerAdaptor;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate()");
@@ -233,7 +235,6 @@ public class MovieDetailActivity extends AppCompatActivity
         /* set the movie title
         * TODO: a11y support */
         String title = cursor.getString(INDEX_MOVIE_TITLE);
-        //mMovieDetailBinding.tvMovieTitle.setText(title);
         setTitle(title);
 
         /* set thumbnail
@@ -264,8 +265,9 @@ public class MovieDetailActivity extends AppCompatActivity
                 String.format(getString(R.string.format_ratings), ratings));
 
         /* set the FragmentPagerAdaptor for the ViewPager used to display overview & reviews */
-        mMovieDetailBinding.overviewReviews.vpOverviewReviews.setAdapter(
-                new DetailsFragmentPagerAdaptor(getSupportFragmentManager(), mCursor, mMovieId));
+        mDetailsFragmentPagerAdaptor =
+                new DetailsFragmentPagerAdaptor(getSupportFragmentManager(), mCursor, mMovieId);
+        mMovieDetailBinding.overviewReviews.vpOverviewReviews.setAdapter(mDetailsFragmentPagerAdaptor);
 
         /* add the tabbed layout to listen to page change notifications so that the ViewPager
          * can be updated accordingly
@@ -279,16 +281,19 @@ public class MovieDetailActivity extends AppCompatActivity
                 (new TabLayout.OnTabSelectedListener() {
                     @Override
                     public void onTabSelected(TabLayout.Tab tab) {
+                        Log.d(TAG, "onTabSelected: tab.position: " + tab.getPosition());
                         mMovieDetailBinding.overviewReviews.vpOverviewReviews.setCurrentItem(
                                 tab.getPosition());
                     }
 
                     @Override
                     public void onTabUnselected(TabLayout.Tab tab) {
+                        Log.d(TAG, "onTabUnselected: ");
                     }
 
                     @Override
                     public void onTabReselected(TabLayout.Tab tab) {
+                        Log.d(TAG, "onTabReselected: ");
                     }
                 }));
 
@@ -300,18 +305,33 @@ public class MovieDetailActivity extends AppCompatActivity
                     @Override
                     public void onPageScrolled(int position, float positionOffset,
                                                int positionOffsetPixels) {
+                        Log.d(TAG, "onPageScrolled: ");
                     }
 
                     @Override
                     public void onPageSelected(int position) {
+                        Log.d(TAG, "onPageSelected: position: " + position);
                         mMovieDetailBinding.overviewReviews.vpOverviewReviews.reMeasureCurrentPage(
                                 mMovieDetailBinding.overviewReviews.vpOverviewReviews.getCurrentItem());
                     }
 
                     @Override
                     public void onPageScrollStateChanged(int state) {
+                        Log.d(TAG, "onPageScrollStateChanged: ");
                     }
                 });
+
+
+        int selectedTabIdx = mMovieDetailBinding.overviewReviews.vpOverviewReviews.getCurrentItem();
+        if (mMovieDetailBinding.overviewReviews.tlOverviewReviews.getSelectedTabPosition()
+                != mDetailsFragmentPagerAdaptor.getItemPosition(selectedTabIdx)) {
+            Log.d(TAG, "*** bindViews: wrong tab marked as selected selectedTabPosition = "
+                    + mMovieDetailBinding.overviewReviews.tlOverviewReviews.getSelectedTabPosition()
+                    + " selectedTabIdx = " + selectedTabIdx);
+            mMovieDetailBinding.overviewReviews.tlOverviewReviews.getTabAt(selectedTabIdx).select();
+            mMovieDetailBinding.overviewReviews.vpOverviewReviews.reMeasureCurrentPage(
+                    mMovieDetailBinding.overviewReviews.vpOverviewReviews.getCurrentItem());
+        }
     }
 
     /**
