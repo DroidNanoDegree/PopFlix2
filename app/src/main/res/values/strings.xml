@@ -20,6 +20,13 @@
     <string name="pref_sort_order_popular_label">Popular</string>
     <string name="pref_sort_order_top_rated_label">Top Rated</string>
 
+    <!-- Popular Movies Activity -->
+    <string name="filter_popular">Popular</string>
+    <string name="filter_top_rated">Top Rated</string>
+
+    <!-- Popular Movies Favorites Tab -->
+    <string name="add_movies_to_favorite">No movies added to favorites yet!</string>
+
     <!-- Detail Activity -->
     <string name="label_trailers" >Trailers</string>
     <string name="reviews_btn_txt">Reviews</string>

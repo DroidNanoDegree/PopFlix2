@@ -26,8 +26,11 @@ import com.firebase.jobdispatcher.GooglePlayDriver;
 import com.firebase.jobdispatcher.Job;
 import com.firebase.jobdispatcher.Lifetime;
 import com.firebase.jobdispatcher.Trigger;
+import com.sriky.popflix.R;
 import com.sriky.popflix.data.MoviesContract;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -41,19 +44,23 @@ public class MovieDataSyncUtils {
     private static final int SYNC_INTERVAL_SECONDS = (int) TimeUnit.HOURS.toSeconds(SYNC_INTERVAL_HOURS);
     private static final int SYNC_FLEXTIME_SECONDS = SYNC_INTERVAL_SECONDS / 3;
 
-    /* unique tag used to set tag for the job. */
-    private static final String FETCH_MOVIE_DATA_TAG = "get_them_movies";
+    /* List to keep track of triggering the fetch service */
+    private static List<String> sInitializedQueryList = new ArrayList<>();
 
-    /* Flag to keep track of triggering the fetch service */
-    private static boolean sInitialized;
-
-    private static void scheduleFirebaseFetchJob(Context context) {
+    /**
+     * Schedules a {@link Job} to query movies data.
+     *
+     * @param context   Context that will be passed to other methods and used to access the
+     *                  ContentResolver.
+     * @param queryPath The API path to query.
+     */
+    private static void scheduleFirebaseFetchJob(Context context, String queryPath) {
         Driver driver = new GooglePlayDriver(context);
         FirebaseJobDispatcher firebaseJobDispatcher = new FirebaseJobDispatcher(driver);
 
         Job fetchMovieDataJob = firebaseJobDispatcher.newJobBuilder()
                 /* setting the unique tag so the job can be identified */
-                .setTag(FETCH_MOVIE_DATA_TAG)
+                .setTag(queryPath)
                 /* setting the constraints to perform the job only on Wifi.*/
                 .setConstraints(Constraint.ON_UNMETERED_NETWORK)
                 /* setting the execution window for the job anywhere from 3hours to 4hours */
@@ -73,16 +80,27 @@ public class MovieDataSyncUtils {
     /**
      * Initializes and starts the {@link MovieDataSyncIntentService} if that hasn't been started already.
      *
-     * @param context Context that will be passed to other methods and used to access the
-     *                ContentResolver.
+     * @param context   Context that will be passed to other methods and used to access the
+     *                  ContentResolver.
+     * @param queryPath The API path to query.
      */
-    synchronized public static void initialize(final Context context) {
-        if (sInitialized) return;
+    synchronized public static void initialize(final Context context, final String queryPath) {
+        if (sInitializedQueryList.contains(queryPath)) return;
 
-        sInitialized = true;
+        sInitializedQueryList.add(queryPath);
 
         /* initiate the job that will periodically fetch the latest data. */
-        scheduleFirebaseFetchJob(context);
+        scheduleFirebaseFetchJob(context, queryPath);
+
+        final String selection;
+
+        if (queryPath.equals(context.getString(R.string.sort_order_popular))) {
+            selection = MoviesContract.MoviesEntry.POPULAR + " =? ";
+        } else if (queryPath.equals(context.getString(R.string.sort_order_top_rated))) {
+            selection = MoviesContract.MoviesEntry.TOP_RATED + " =? ";
+        } else {
+            throw new RuntimeException("Unsupported queryPath: " + queryPath);
+        }
 
         /* check if the data exists in the local database. If not trigger the service to fetch data */
         Thread checkForEmpty = new Thread(new Runnable() {
@@ -92,11 +110,11 @@ public class MovieDataSyncUtils {
                 Cursor cursor = context.getContentResolver().query(
                         MoviesContract.MoviesEntry.CONTENT_URI,
                         projectionColumns,
-                        null,
-                        null,
+                        selection,
+                        new String[]{"1"},
                         null);
                 if (cursor == null || cursor.getCount() == 0) {
-                    fetchDataImmediately(context);
+                    fetchDataImmediately(context, queryPath);
                 }
             }
         });
@@ -107,10 +125,12 @@ public class MovieDataSyncUtils {
     /**
      * Immediately starts the {@link MovieDataSyncIntentService} to fetch data.
      *
-     * @param context The Context used to start the IntentService for the sync.
+     * @param context   The Context used to start the IntentService for the sync.
+     * @param queryPath The API path to query.
      */
-    public static void fetchDataImmediately(Context context) {
+    public static void fetchDataImmediately(Context context, String queryPath) {
         Intent fetchMovieDataIntent = new Intent(context, MovieDataSyncIntentService.class);
+        fetchMovieDataIntent.putExtra(MovieDataSyncIntentService.QUERY_PATH_BUNDLE_KEY, queryPath);
         context.startService(fetchMovieDataIntent);
     }
 }

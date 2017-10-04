@@ -42,7 +42,7 @@ public class MovieDataFirebaseJobService extends JobService {
             @Override
             protected Void doInBackground(Void... voids) {
                 Log.d(TAG, "doInBackground()");
-                MovieDataSyncTask.fetchMovieData(getApplicationContext());
+                MovieDataSyncTask.fetchMovieData(getApplicationContext(), job.getTag());
                 return null;
             }
 

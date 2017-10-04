@@ -16,9 +16,11 @@
 package com.sriky.popflix.utilities;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.util.Log;
 
 import com.sriky.popflix.BuildConfig;
+import com.sriky.popflix.R;
 import com.sriky.popflix.data.MoviesContract.MoviesEntry;
 import com.sriky.popflix.parcelables.MovieReview;
 import com.sriky.popflix.parcelables.MovieTrailer;
@@ -33,14 +35,14 @@ import java.util.ArrayList;
  * Helper class to handle json parsing, setting the query path for movie thumbnails etc.
  */
 public final class MovieDataUtils {
-
     public static final String MOVIE_ID_INTENT_EXTRA_KEY = "movie_id";
     public static final String TMDB_API_KEY = BuildConfig.TMDB_API_KEY;
 
     //async task loader IDs.
     public static final int BASIC_MOVIE_DATA_LOADER_ID = 100;
-    public static final int DETAIL_MOVIE_DATA_LOADER_ID = BASIC_MOVIE_DATA_LOADER_ID + 1;
-    public static final int REVIEWS_DATA_LOADER_ID = DETAIL_MOVIE_DATA_LOADER_ID + 1;
+    public static final int DETAIL_MOVIE_DATA_LOADER_ID = 101;
+    public static final int REVIEWS_DATA_LOADER_ID = 102;
+    public static final int FAVORITES_MOVIES_LOADER_ID = 103;
 
     //URL keys for sending and retrieving urls with the "FetchMovieDataTaskLoader".
     public static final String FETCH_MOVIE_DATA_URL_KEY = "fetch_movie_data_url";
@@ -49,6 +51,11 @@ public final class MovieDataUtils {
     public static final String[] MOVIE_DATA_PROJECTION = {
             MoviesEntry.MOVIE_ID,
             MoviesEntry.MOVIE_POSTER_PATH,
+    };
+
+    /* project array used to query favorited movie data from movies table. */
+    public static final String[] FAVORITE_MOVIE_DATA_PROJECTION = {
+            MoviesEntry.MOVIE_ID,
     };
 
     /* indexes for get the column data from the cursor. */
@@ -180,7 +187,8 @@ public final class MovieDataUtils {
      * @param queryResult The JSON response string from the API.
      * @return {@link ContentValues} Array. Caller to expect and handle null for the return.
      */
-    public static ContentValues[] buildContentValuesArrayfromJSONResponse(String queryResult) {
+    public static ContentValues[] buildContentValuesArrayfromJSONResponse(Context context,
+                                                                          String queryResult, String sort_order) {
         try {
             //validate the response from the server.
             if (isResponseValid(queryResult)) {
@@ -198,6 +206,11 @@ public final class MovieDataUtils {
                         cv.put(MoviesEntry.MOVIE_RELEASE_DATE, data.getString(JSON_KEY_MOVIE_RELEASE_DATE));
                         cv.put(MoviesEntry.MOVIE_VOTE_AVERAGE, data.getDouble(JSON_KEY_MOVIE_VOTE_AVERAGE));
                         cv.put(MoviesEntry.MOVIE_VOTE_COUNT, data.getInt(JSON_KEY_MOVIE_VOTE_COUNT));
+                        if (sort_order.equals(context.getString(R.string.sort_order_popular))) {
+                            cv.put(MoviesEntry.POPULAR, 1);
+                        } else if (sort_order.equals(context.getString(R.string.sort_order_top_rated))) {
+                            cv.put(MoviesEntry.TOP_RATED, 1);
+                        }
                         contentValuesArray[i] = cv;
                     }
                     return contentValuesArray;

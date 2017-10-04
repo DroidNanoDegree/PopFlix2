@@ -18,12 +18,16 @@ package com.sriky.popflix.sync;
 import android.app.IntentService;
 import android.content.Intent;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 /**
  * Subclass of {@link IntentService} to fetch movie data in the background
  */
 
 public class MovieDataSyncIntentService extends IntentService {
+    public static final String QUERY_PATH_BUNDLE_KEY = "query_path";
+
+    private static final String TAG = MovieDataSyncIntentService.class.getSimpleName();
 
     public MovieDataSyncIntentService() {
         super("MovieDataSyncIntentService");
@@ -31,6 +35,11 @@ public class MovieDataSyncIntentService extends IntentService {
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
-        MovieDataSyncTask.fetchMovieData(this);
+        Log.d(TAG, "onHandleIntent()");
+        if (intent.hasExtra(QUERY_PATH_BUNDLE_KEY)) {
+            String queryPath = intent.getStringExtra(QUERY_PATH_BUNDLE_KEY);
+            Log.d(TAG, "onHandleIntent() queryPath : " + queryPath);
+            MovieDataSyncTask.fetchMovieData(this, queryPath);
+        }
     }
 }
