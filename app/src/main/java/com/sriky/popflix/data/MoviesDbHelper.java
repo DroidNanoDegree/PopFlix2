@@ -34,7 +34,7 @@ public class MoviesDbHelper extends SQLiteOpenHelper {
     /*
      * Database version, to be utilized when database scheme changes(i.e adding or removing db columns).
      */
-    public static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 2;
 
     public MoviesDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -58,6 +58,8 @@ public class MoviesDbHelper extends SQLiteOpenHelper {
                 MoviesEntry.MOVIE_VOTE_AVERAGE + " INTEGER NOT NULL, " +
                 MoviesEntry.MOVIE_VOTE_COUNT   + " INTEGER NOT NULL, " +
                 MoviesEntry.USER_FAVOURITE     + " BIT, " +
+                MoviesEntry.POPULAR            + " BIT, " +
+                MoviesEntry.TOP_RATED          + " BIT, " +
                 /* ensuring the table will contain single entry per MovieId.
                  * If there is a conflict the old entry will be replaced with a new entry
                  */

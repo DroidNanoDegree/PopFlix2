@@ -159,6 +159,7 @@ public class MoviesProvider extends ContentProvider {
                         s1);
                 break;
             }
+
             default:
                 throw new UnsupportedOperationException("Unknown Uri:" + uri);
         }

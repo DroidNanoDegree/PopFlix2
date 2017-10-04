@@ -87,9 +87,19 @@ public class MoviesContract {
         public static final String MOVIE_RELEASE_DATE = "release_date";
 
         /*
-         * Flag to indicated movies favourited by users.
+         * Flag to indicate movies favourited by users.
          */
         public static final String USER_FAVOURITE = "user_favourite";
+
+        /*
+         * Flag to indicate movie is popular.
+         */
+        public static final String POPULAR = "popular";
+
+        /*
+         * Flag to indicate movie is top rated.
+         */
+        public static final String TOP_RATED = "top_rated";
 
         /**
          * Builds the Uri to query the movies database for a specific movie represented by the
