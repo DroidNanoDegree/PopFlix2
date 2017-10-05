@@ -27,6 +27,9 @@
     <!-- Popular Movies Favorites Tab -->
     <string name="add_movies_to_favorite">No movies added to favorites yet!</string>
 
+    <!-- Reviews Fragment -->
+    <string name="no_reviews">No reviews for the movie yet!</string>
+
     <!-- Detail Activity -->
     <string name="label_trailers" >Trailers</string>
     <string name="reviews_btn_txt">Reviews</string>

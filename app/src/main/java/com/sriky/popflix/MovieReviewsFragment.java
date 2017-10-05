@@ -22,13 +22,13 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.sriky.popflix.adaptors.MovieReviewsAdaptor;
+import com.sriky.popflix.databinding.MovieReviewsBinding;
 import com.sriky.popflix.loaders.FetchMovieDataTaskLoader;
 import com.sriky.popflix.parcelables.MovieReview;
 import com.sriky.popflix.utilities.MovieDataUtils;
@@ -48,27 +48,34 @@ public class MovieReviewsFragment extends Fragment implements LoaderManager.Load
     public static final String ARG_MOVIE_ID_KEY = "movie_id";
 
     private ArrayList<MovieReview> mMovieReviewList;
-    private RecyclerView mRecyclerView;
     private MovieReviewsAdaptor mMovieReviewsAdaptor;
+
+    private MovieReviewsBinding mMovieReviewsBinding;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         Log.d(TAG, "onCreateView()");
-        View rootView = inflater.inflate(R.layout.movie_reviews, container, false);
+        mMovieReviewsBinding = MovieReviewsBinding.inflate(inflater, container, false);
+
+        showProgressBarAndHideErrorMessage();
 
         /* set up the RecyclerView */
-        mRecyclerView = rootView.findViewById(R.id.reviews_recyclerView);
-        mRecyclerView.setHasFixedSize(true);
-        mRecyclerView.setLayoutManager(
+        mMovieReviewsBinding.reviewsRecyclerView.setHasFixedSize(true);
+        mMovieReviewsBinding.reviewsRecyclerView.setLayoutManager(
                 new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
         mMovieReviewsAdaptor = new MovieReviewsAdaptor(getContext());
-        mRecyclerView.setAdapter(mMovieReviewsAdaptor);
+        mMovieReviewsBinding.reviewsRecyclerView.setAdapter(mMovieReviewsAdaptor);
 
         /* get the movie ID from the bundle */
         Bundle args = getArguments();
-        String movieId = args.getString(ARG_MOVIE_ID_KEY);
+        String movieId;
+        if (args.containsKey(ARG_MOVIE_ID_KEY)) {
+            movieId = args.getString(ARG_MOVIE_ID_KEY);
+        } else {
+            throw new RuntimeException("MovieId not set!");
+        }
 
         /* build the url for query reviews for a specific movie ID */
         URL url = NetworkUtils.buildReviewsURL(movieId, MovieDataUtils.TMDB_API_KEY);
@@ -81,7 +88,7 @@ public class MovieReviewsFragment extends Fragment implements LoaderManager.Load
         getLoaderManager().initLoader(MovieDataUtils.REVIEWS_DATA_LOADER_ID,
                 loaderBundle, MovieReviewsFragment.this);
 
-        return rootView;
+        return mMovieReviewsBinding.getRoot();
     }
 
     @Override
@@ -94,14 +101,36 @@ public class MovieReviewsFragment extends Fragment implements LoaderManager.Load
         if (data != null) {
             Log.d(TAG, "onLoadFinished() data : " + data);
             mMovieReviewList = MovieDataUtils.getMovieReviews(data);
-            mMovieReviewsAdaptor.updateDataSource(mMovieReviewList);
+            if (mMovieReviewList.size() == 0) {
+                mMovieReviewsBinding.tvErrorMsg.setText(getString(R.string.no_reviews));
+                hideProgressBarAndShowErrorMessage();
+            } else {
+                mMovieReviewsBinding.pbPopularMovies.setVisibility(View.INVISIBLE);
+                mMovieReviewsAdaptor.updateDataSource(mMovieReviewList);
+            }
         } else {
-            //TODO: display Error!
+            hideProgressBarAndShowErrorMessage();
         }
     }
 
     @Override
     public void onLoaderReset(Loader<String> loader) {
 
+    }
+
+    /**
+     * Displays the progress bar and hides the error message views.
+     */
+    private void showProgressBarAndHideErrorMessage() {
+        mMovieReviewsBinding.pbPopularMovies.setVisibility(View.VISIBLE);
+        mMovieReviewsBinding.tvErrorMsg.setVisibility(View.INVISIBLE);
+    }
+
+    /**
+     * Hides the progress bar view and makes the the error message view VISIBLE.
+     */
+    private void hideProgressBarAndShowErrorMessage() {
+        mMovieReviewsBinding.pbPopularMovies.setVisibility(View.INVISIBLE);
+        mMovieReviewsBinding.tvErrorMsg.setVisibility(View.VISIBLE);
     }
 }
