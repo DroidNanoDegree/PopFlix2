@@ -99,8 +99,7 @@ public class MovieDetailActivity extends AppCompatActivity
 
         mMovieDetailBinding = DataBindingUtil.setContentView(this, R.layout.activity_movie_detail);
 
-        mMovieDetailBinding.tvErrorMsg.setText(
-                getString(R.string.data_download_error));
+        mMovieDetailBinding.trailers.progressBar.setVisibility(View.VISIBLE);
 
         mMovieDetailBinding.trailers.trailerRecyclerView.setHasFixedSize(true);
         mMovieDetailBinding.trailers.trailerRecyclerView.setLayoutManager(
@@ -134,7 +133,7 @@ public class MovieDetailActivity extends AppCompatActivity
                 @Override
                 protected Cursor doInBackground(Void... voids) {
                     return getContentResolver().query(
-                            MoviesEntry.CONTENT_URI.buildUpon().appendPath(mMovieId).build(),
+                            MoviesEntry.buildMovieUriWithId(mMovieId),
                             MOVIE_DETAILS_PROJECTION,
                             null,
                             null,
@@ -198,7 +197,7 @@ public class MovieDetailActivity extends AppCompatActivity
         ContentValues contentValues = new ContentValues();
         contentValues.put(MoviesEntry.USER_FAVOURITE, mFavorite);
         int id = getContentResolver().update(
-                MoviesEntry.CONTENT_URI.buildUpon().appendPath(mMovieId).build(),
+                MoviesEntry.buildMovieUriWithId(mMovieId),
                 contentValues,
                 null,
                 null);
@@ -339,9 +338,9 @@ public class MovieDetailActivity extends AppCompatActivity
      */
     private void onDownloadSuccess() {
         //hide the progress bar.
-        mMovieDetailBinding.progressBar.setVisibility(View.INVISIBLE);
+        mMovieDetailBinding.trailers.progressBar.setVisibility(View.INVISIBLE);
         //hide error msg tv.
-        mMovieDetailBinding.tvErrorMsg.setVisibility(View.INVISIBLE);
+        mMovieDetailBinding.trailers.tvErrorMsg.setVisibility(View.INVISIBLE);
         /* set the adaptor for the trailers listview */
         mMovieTrailerAdaptor.updateTrailers(mMovieTrailersList);
     }
@@ -349,15 +348,15 @@ public class MovieDetailActivity extends AppCompatActivity
     private void onFetchFailed() {
         Log.d(TAG, "onFetchFailed()");
         //hide the progress bar.
-        mMovieDetailBinding.progressBar.setVisibility(View.INVISIBLE);
-        mMovieDetailBinding.tvErrorMsg.setVisibility(View.VISIBLE);
+        mMovieDetailBinding.trailers.progressBar.setVisibility(View.INVISIBLE);
+        mMovieDetailBinding.trailers.tvErrorMsg.setVisibility(View.VISIBLE);
     }
 
     @Override
     public void onPreExecute() {
         Log.d(TAG, "onPreExecute: ()");
         //show the progress bar.
-        mMovieDetailBinding.progressBar.setVisibility(View.VISIBLE);
+        mMovieDetailBinding.trailers.progressBar.setVisibility(View.VISIBLE);
     }
 
 
@@ -372,10 +371,14 @@ public class MovieDetailActivity extends AppCompatActivity
         if (data != null) {
             Log.d(TAG, "onLoadFinished: queryResult.length() = " + data.length());
             mMovieTrailersList = MovieDataUtils.getMovieTrailers(data);
-            onDownloadSuccess();
+            if(mMovieTrailersList.size() == 0) {
+                mMovieDetailBinding.trailers.tvErrorMsg.setText(getString(R.string.no_trailers));
+                onFetchFailed();
+            } else {
+                onDownloadSuccess();
+            }
         } else {
-            //TODO: Error should be displayed in Trailers layout!
-            //onFetchFailed();
+            onFetchFailed();
         }
     }
 

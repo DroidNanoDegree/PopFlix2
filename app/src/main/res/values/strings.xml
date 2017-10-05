@@ -30,6 +30,9 @@
     <!-- Reviews Fragment -->
     <string name="no_reviews">No reviews for the movie yet!</string>
 
+    <!-- Trailers layout -->
+    <string name="no_trailers">No trailers found!</string>
+
     <!-- Detail Activity -->
     <string name="label_trailers" >Trailers</string>
     <string name="reviews_btn_txt">Reviews</string>
