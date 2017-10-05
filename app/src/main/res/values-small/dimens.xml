@@ -14,20 +14,6 @@
   ~ See the License for the specific language governing permissions and limitations under the License.
   -->
 
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content">
-
-    <TextView
-        android:id="@+id/tv_author"
-        style="@style/Reviews.Author.TextView" />
-
-    <TextView
-        android:id="@+id/tv_reviewContent"
-        style="@style/Reviews.Content.TextView"/>
-
-</LinearLayout>
+<resources>
+    <dimen name="movie_posters_column_width">80dp</dimen>
+</resources>

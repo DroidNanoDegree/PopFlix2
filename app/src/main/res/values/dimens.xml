@@ -1,4 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="column_width">120dp</dimen>
+    <dimen name="movie_posters_column_width">100dp</dimen>
+
+    <dimen name="activity_detail_layout_margin">2dp</dimen>
+    <dimen name="activity_detail_layout_margin_left">@dimen/activity_detail_layout_margin</dimen>
+    <dimen name="activity_detail_layout_margin_right">@dimen/activity_detail_layout_margin</dimen>
+
+    <item name="layout_movie_details_thumbnail_constraint_horizontal_weight" type="dimen" format="float">1.2</item>
+    <item name="layout_movie_trailers_constraint_horizontal_weight" type="dimen" format="float">2</item>
+
+    <dimen name="activity_popular_tablayout_margin">2dp</dimen>
+    <dimen name="activity_popular_tablayout_margin_top">@dimen/activity_popular_tablayout_margin</dimen>
+    <dimen name="activity_popular_tablayout_margin_left">@dimen/activity_popular_tablayout_margin</dimen>
+    <dimen name="activity_popular_tablayout_margin_right">@dimen/activity_popular_tablayout_margin</dimen>
+
+    <dimen name="activity_popular_wrap_content_view_pager_margin">2dp</dimen>
+    <dimen name="activity_popular_wrap_content_view_pager_margin_top">@dimen/activity_popular_wrap_content_view_pager_margin</dimen>
+    <dimen name="activity_popular_wrap_content_view_pager_margin_left">@dimen/activity_popular_wrap_content_view_pager_margin</dimen>
+    <dimen name="activity_popular_wrap_content_view_pager_margin_right">@dimen/activity_popular_wrap_content_view_pager_margin</dimen>
+
+    <dimen name="movie_details_thumbnail_layout_items_margin">8dp</dimen>
+    <dimen name="movie_details_thumbnail_layout_items_margin_top">@dimen/movie_details_thumbnail_layout_items_margin</dimen>
+    <dimen name="movie_details_thumbnail_layout_items_margin_left">@dimen/movie_details_thumbnail_layout_items_margin</dimen>
+    <dimen name="movie_details_thumbnail_layout_items_margin_right">@dimen/movie_details_thumbnail_layout_items_margin</dimen>
+    <dimen name="movie_details_thumbnail_layout_items_margin_bottom">@dimen/movie_details_thumbnail_layout_items_margin</dimen>
+
+    <dimen name="movie_trailers_layout_items_margin">8dp</dimen>
+    <dimen name="movie_trailers_layout_items_margin_top">@dimen/movie_trailers_layout_items_margin</dimen>
+    <dimen name="movie_trailers_layout_items_margin_left">@dimen/movie_trailers_layout_items_margin</dimen>
+    <dimen name="movie_trailers_layout_items_margin_right">@dimen/movie_trailers_layout_items_margin</dimen>
+    <dimen name="movie_trailers_layout_items_margin_bottom">@dimen/movie_trailers_layout_items_margin</dimen>
+
+    <dimen name="movie_trailers_layout_imageview_margin_top">8dp</dimen>
+    <dimen name="movie_trailers_layout_imageview_margin_left">32dp</dimen>
+    <dimen name="movie_trailers_layout_imageview_margin_right">32dp</dimen>
+
+    <dimen name="movie_reviews_list_item_margin">2dp</dimen>
+    <dimen name="movie_reviews_list_item_margin_left">@dimen/movie_reviews_list_item_margin</dimen>
+    <dimen name="movie_reviews_list_item_margin_right">@dimen/movie_reviews_list_item_margin</dimen>
+    <dimen name="movie_reviews_list_item_margin_top">@dimen/movie_reviews_list_item_margin</dimen>
+    <dimen name="movie_reviews_list_item_margin_bottom">@dimen/movie_reviews_list_item_margin</dimen>
+
+    <dimen name="movie_reviews_list_review_author_text_padding">2dp</dimen>
+    <dimen name="movie_reviews_list_review_content_text_padding">4dp</dimen>
+
+    <dimen name="movie_trailers_list_button_margin_top">4dp</dimen>
+    <dimen name="movie_trailers_list_button_margin_left">2dp</dimen>
+    <dimen name="movie_trailers_list_button_margin_right">2dp</dimen>
+    <dimen name="movie_trailers_list_button_margin_bottom">2dp</dimen>
+    <dimen name="movie_trailers_list_button_drawable_padding">2dp</dimen>
+
+    <dimen name="display1_font_size_large">16sp</dimen>
+    <dimen name="display1_font_size_medium">14sp</dimen>
+    <dimen name="display1_font_size_small">12sp</dimen>
+
+    <dimen name="caption_font_size_large">16sp</dimen>
+    <dimen name="caption_font_size_medium">14sp</dimen>
+    <dimen name="caption_font_size_small">12sp</dimen>
+
+    <dimen name="movie_details_label_textview_height">20dp</dimen>
+
+    <dimen name="movie_overview_layout_items_margin">4dp</dimen>
+    <dimen name="error_textview_padding">4dp</dimen>
+    <dimen name="error_textview_layout_margin">8dp</dimen>
+
 </resources>

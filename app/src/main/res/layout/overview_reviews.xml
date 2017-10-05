@@ -25,37 +25,21 @@
 
             <android.support.design.widget.TabLayout
                 android:id="@+id/tl_overview_reviews"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/primaryColor"
-                app:tabSelectedTextColor="@color/primaryTextColor"
-                app:tabTextColor="@color/primaryTextColor"
-                android:layout_marginTop="2dp"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:tabGravity="fill">
+                style="@style/Popular.Movies.TabLayout"
+                android:layout_marginTop="@dimen/activity_popular_tablayout_margin_top">
 
                 <android.support.design.widget.TabItem
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical|center_horizontal"
-                    android:text="@string/overview"
-                    android:visibility="visible" />
+                    style="@style/TextAppearance.Design.Tab"
+                    android:text="@string/overview" />
 
                 <android.support.design.widget.TabItem
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical|center_horizontal"
-                    android:text="@string/reviews"
-                    android:visibility="visible" />
+                    style="@style/TextAppearance.Design.Tab"
+                    android:text="@string/reviews" />
             </android.support.design.widget.TabLayout>
 
             <com.sriky.popflix.customViews.WrapContentViewPager
                 android:id="@+id/vp_overview_reviews"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"/>
+                style="@style/WrapContentViewPager"/>
 
     </LinearLayout>
 </layout>
