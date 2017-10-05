@@ -23,16 +23,6 @@
             </intent-filter>
         </activity>
 
-        <!-- The setting activity which displays the preference fragment -->
-        <activity
-            android:name=".settings.SettingsActivity"
-            android:label="@string/action_settings"
-            android:parentActivityName=".PopularMoviesActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".PopularMoviesActivity" />
-        </activity>
-
         <!-- The movie details activity -->
         <activity android:name=".MovieDetailActivity"
             android:label="@string/details_activity"
