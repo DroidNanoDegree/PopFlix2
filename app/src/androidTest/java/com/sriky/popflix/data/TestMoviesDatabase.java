@@ -317,6 +317,7 @@ public class TestMoviesDatabase {
 
         /* close the db. */
         db.close();
+        shouldBeEmptyMoviesCursor.close();
         moviesDBHelper.close();
     }
 
