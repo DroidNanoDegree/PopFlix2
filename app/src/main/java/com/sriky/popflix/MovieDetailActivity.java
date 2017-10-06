@@ -233,14 +233,11 @@ public class MovieDetailActivity extends AppCompatActivity
             throw new RuntimeException("No data loaded in the cursor!");
         }
 
-        /* set the movie title
-        * TODO: a11y support */
+        /* set the movie title */
         String title = cursor.getString(INDEX_MOVIE_TITLE);
         setTitle(title);
 
-        /* set thumbnail
-         * TODO: a11y support
-         */
+        /* set thumbnail */
         String relativePath = cursor.getString(INDEX_MOVIE_POSTER_PATH);
         Uri uri = NetworkUtils.getURLForImageWithRelativePathAndSize(relativePath,
                 MovieDataUtils.getQueryThumbnailWidthPath());
@@ -249,21 +246,23 @@ public class MovieDetailActivity extends AppCompatActivity
                 .placeholder(R.drawable.loading)
                 .error(R.drawable.error)
                 .into(mMovieDetailBinding.thumbnailWithDetails.thumbnailView);
+        mMovieDetailBinding.thumbnailWithDetails.thumbnailView.setContentDescription(
+                getString(R.string.a11y_movie_thumbnail, title));
 
-        /* set release date
-         * TODO: a11y support
-         */
+        /* set release date */
         String formattedYear = cursor.getString(INDEX_MOVIE_RELEASE_DATE);
         formattedYear = formattedYear.substring(0, formattedYear.indexOf("-"));
         mMovieDetailBinding.thumbnailWithDetails.tvDate.setText(formattedYear);
+        mMovieDetailBinding.thumbnailWithDetails.tvDate.setContentDescription(
+                getString(R.string.a11y_release_date, formattedYear));
 
-        /* set ratings
-         * TODO: a11y support
-         */
+        /* set ratings */
         double ratings = cursor.getDouble(INDEX_MOVIE_VOTE_AVERAGE);
         Log.d(TAG, "bindViews: ratings: " + ratings);
         mMovieDetailBinding.thumbnailWithDetails.tvRatings.setText(
                 String.format(getString(R.string.format_ratings), ratings));
+        mMovieDetailBinding.thumbnailWithDetails.tvRatings.setContentDescription(
+                getString(R.string.a11y_rating, Double.toString(ratings)));
 
         /* set the FragmentPagerAdaptor for the ViewPager used to display overview & reviews */
         mDetailsFragmentPagerAdaptor =
