@@ -116,6 +116,7 @@ public class MovieDataSyncUtils {
                 if (cursor == null || cursor.getCount() == 0) {
                     fetchDataImmediately(context, queryPath);
                 }
+                cursor.close();
             }
         });
 
