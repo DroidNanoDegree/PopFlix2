@@ -1,17 +1,129 @@
-<resources>
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorPrimary">@color/secondaryColor</item>
+        <item name="colorPrimaryDark">@color/primaryDarkColor</item>
+        <item name="colorAccent">@color/secondaryColor</item>
         <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
     </style>
 
-    <style name="RatingBar" parent="Theme.AppCompat">
-        <item name="colorControlNormal">@color/colorGreyDark</item>
-        <item name="colorControlActivated">@color/colorGreyLight</item>
+    <style name="Popular.Movies.TabLayout" parent="Base.Widget.Design.TabLayout">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginLeft">@dimen/activity_popular_tablayout_margin_left</item>
+        <item name="android:layout_marginStart">@dimen/activity_popular_tablayout_margin_left</item>
+        <item name="android:layout_marginRight">@dimen/activity_popular_tablayout_margin_right</item>
+        <item name="android:layout_marginEnd">@dimen/activity_popular_tablayout_margin_right</item>
+        <item name="android:background">@color/primaryColor</item>
+        <item name="tabSelectedTextColor">@color/primaryTextColor</item>
+        <item name="tabTextColor">@color/primaryTextColor</item>
+        <item name="android:gravity">fill</item>
+    </style>
+
+    <style name="WrapContentViewPager">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginLeft">@dimen/activity_popular_wrap_content_view_pager_margin_left</item>
+        <item name="android:layout_marginStart">@dimen/activity_popular_wrap_content_view_pager_margin_left</item>
+        <item name="android:layout_marginRight">@dimen/activity_popular_wrap_content_view_pager_margin_right</item>
+        <item name="android:layout_marginEnd">@dimen/activity_popular_wrap_content_view_pager_margin_right</item>
+        <item name="android:layout_marginTop">@dimen/activity_popular_wrap_content_view_pager_margin_top</item>
+    </style>
+
+    <style name="DetailThumbnail">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_margin">@dimen/movie_details_thumbnail_layout_items_margin</item>
+    </style>
+
+    <style name="Display1.Base.Style" parent="@style/TextAppearance.AppCompat.Display1">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/primaryTextColor</item>
+        <item name="android:textSize">@dimen/display1_font_size_large</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <style name="Caption.Base.Style" parent="@style/TextAppearance.AppCompat.Caption">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/primaryTextColor</item>
+        <item name="android:textSize">@dimen/caption_font_size_medium</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <style name="Layout.Details.TextView.Style" parent="@style/Display1.Base.Style">
+        <item name="android:layout_height">@dimen/movie_details_label_textview_height</item>
+        <item name="android:textAlignment">center</item>
+    </style>
+
+    <style name="Layout.Movie.Overview.TextView.Style" parent="@style/Display1.Base.Style">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:textAlignment">viewStart</item>
+        <item name="android:gravity">start</item>
+        <item name="android:textSize">@dimen/display1_font_size_medium</item>
+        <item name="android:layout_margin">@dimen/movie_overview_layout_items_margin</item>
+    </style>
+
+    <style name="PopularMovies.ErrorTextView" parent="Display1.Base.Style">
+        <item name="android:layout_gravity">center</item>
+        <item name="android:background">@color/primaryLightColor</item>
+        <item name="android:textSize">@dimen/display1_font_size_medium</item>
+        <item name="android:padding">@dimen/error_textview_padding</item>
+        <item name="android:layout_margin">@dimen/error_textview_layout_margin</item>
+    </style>
+
+    <style name="PopularMovies.ProgressBar" parent="@style/Base.Widget.AppCompat.ProgressBar">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center_horizontal|center_vertical</item>
+    </style>
+
+    <style name="Movie.Trailers.Label" parent="@style/Caption.Base.Style">
+        <item name="android:layout_marginEnd">@dimen/movie_trailers_layout_items_margin_right</item>
+        <item name="android:layout_marginRight">@dimen/movie_trailers_layout_items_margin_right</item>
+        <item name="android:layout_marginLeft">@dimen/movie_trailers_layout_items_margin_left</item>
+        <item name="android:layout_marginStart">@dimen/movie_trailers_layout_items_margin_left</item>
+        <item name="android:layout_marginTop">@dimen/movie_trailers_layout_items_margin_top</item>
+    </style>
+
+    <style name="Popular.Movies.Tab" parent="@style/TextAppearance.Design.Tab">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center_vertical|center_horizontal</item>
+    </style>
+
+    <style name="Reviews.Author.TextView" parent="@style/Caption.Base.Style">
+        <item name="android:background">@color/primaryLightColor</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:padding">@dimen/movie_reviews_list_review_author_text_padding</item>
+        <item name="android:layout_marginTop">@dimen/movie_reviews_list_item_margin_top</item>
+    </style>
+
+    <style name="Reviews.Content.TextView" parent="@style/Display1.Base.Style">
+        <item name="android:background">@color/primaryColor</item>
+        <item name="android:textStyle">italic</item>
+        <item name="android:textSize">@dimen/display1_font_size_small</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:padding">@dimen/movie_reviews_list_review_content_text_padding</item>
+    </style>
+
+    <style name="Movie.Trailers.Button" parent="@style/Display1.Base.Style">
+        <item name="android:background">@null</item>
+        <item name="android:textSize">@dimen/display1_font_size_small</item>
+        <item name="android:layout_gravity">center_horizontal|center_vertical</item>
+        <item name="android:drawablePadding">@dimen/movie_trailers_list_button_drawable_padding</item>
+        <item name="android:layout_marginEnd">@dimen/movie_trailers_list_button_margin_right</item>
+        <item name="android:layout_marginRight">@dimen/movie_trailers_list_button_margin_right</item>
+        <item name="android:layout_marginLeft">@dimen/movie_trailers_list_button_margin_left</item>
+        <item name="android:layout_marginStart">@dimen/movie_trailers_list_button_margin_left</item>
+        <item name="android:layout_marginTop">@dimen/movie_trailers_list_button_margin_top</item>
+        <item name="android:layout_marginBottom">@dimen/movie_trailers_list_button_margin_bottom</item>
     </style>
 
 </resources>

@@ -1,29 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/colorPrimaryDark">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <com.sriky.popflix.AutofitRecyclerView
-        android:id="@+id/rv_posters"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:columnWidth="@dimen/column_width"/>
+        android:orientation="vertical"
+        android:background="@color/primaryColor">
 
-    <ProgressBar
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="invisible"
-        android:id="@+id/pb_popularMoviesActivity"/>
+        <android.support.design.widget.TabLayout
+            android:id="@+id/tl_movies_filter"
+            style="@style/Popular.Movies.TabLayout">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/tv_error_msg"
-        android:text="@string/data_download_error"
-        android:textColor="@color/colorText"
-        android:padding="16dp"
-        android:visibility="invisible"/>
-</FrameLayout>
+            <android.support.design.widget.TabItem
+                android:id="@+id/tab_popular"
+                style="@style/TextAppearance.Design.Tab"
+                android:text="@string/filter_popular" />
+
+            <android.support.design.widget.TabItem
+                android:id="@+id/tab_top_rated"
+                style="@style/TextAppearance.Design.Tab"
+                android:text="@string/filter_top_rated" />
+
+            <android.support.design.widget.TabItem
+                android:id="@+id/tab_favorites"
+                style="@style/TextAppearance.Design.Tab"
+                android:icon="@drawable/favorite_selected" />
+
+        </android.support.design.widget.TabLayout>
+
+        <com.sriky.popflix.customViews.WrapContentViewPager
+            android:id="@+id/vp_posters"
+            style="@style/WrapContentViewPager" />
+
+    </LinearLayout>
+
+</layout>

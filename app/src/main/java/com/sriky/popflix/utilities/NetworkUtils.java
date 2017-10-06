@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2017 Srikanth Basappa
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
+ */
+
 package com.sriky.popflix.utilities;
 
 import android.net.Uri;
@@ -13,8 +28,18 @@ import java.util.Scanner;
  * Helper class(static) to assist in generating URLs and performing API requests.
  */
 public final class NetworkUtils {
-    private static final String TMDA_BASE_URL = "https://api.themoviedb.org/3/movie";
+    /* TMDB API */
+    private static final String TMDB_BASE_URL = "https://api.themoviedb.org/3/movie";
     private static final String PARAM_QUERY_API_KEP = "api_key";
+    /* path to the videos */
+    private static final String PATH_VIDEOS = "videos";
+    /* path to reviews */
+    private static final String PATH_REVIEWS = "reviews";
+
+    /* youtube */
+    private static final String YOUTUBE_BASE_URL = "https://www.youtube.com";
+    private static final String YOUTUBE_VIDEOS_PATH = "watch";
+    private static final String YOUTUBE_QUERY_PARAM_KEY = "v";
 
     //images
     private static final String TMDA_IMAGE_BASE_URL = "http://image.tmdb.org/t/p";
@@ -34,26 +59,52 @@ public final class NetworkUtils {
     }
 
     /**
-     * Builds URL for the specified path using TMDB base URL.
+     * Builds URL for the specified movieId using TMDB base URL.
      *
-     * @param path   - query parameter for desired ordering of the movie.
-     * @param apiKey - API key for TMDB.
-     * @return URL to query TMBD to get movies in the order specified by path param.
+     * @param movieId The movie ID.
+     * @param apiKey  API key for TMDB.
+     * @return URL to query TMBD to get movies in the order specified by movieId param.
      */
-    public static URL buildURL(String path, String apiKey) {
-        Uri uri = Uri.parse(TMDA_BASE_URL).buildUpon()
-                .appendPath(path)
-                .appendQueryParameter(PARAM_QUERY_API_KEP, apiKey)
+    public static URL buildURL(String movieId, String apiKey) {
+        Uri uri = buildUri(apiKey, movieId);
+        return buildUrl(uri);
+    }
+
+    /**
+     * Builds the URL to query TMDB API for trailer videos.
+     *
+     * @param movieId The Movie ID
+     * @param apiKey  API key for TMDB.
+     * @return URL to query trailers for the specific movie ID.
+     */
+    public static URL buildVideosURL(String movieId, String apiKey) {
+        Uri uri = buildUri(apiKey, movieId, PATH_VIDEOS);
+        return buildUrl(uri);
+    }
+
+    /**
+     * Builds the URL to query API for reviews.
+     *
+     * @param movieId The movie ID for which the reviews.
+     * @param apiKey  API key for TMDB.
+     * @return URL to query reviews for the specific movie ID.
+     */
+    public static URL buildReviewsURL(String movieId, String apiKey) {
+        Uri uri = buildUri(apiKey, movieId, PATH_REVIEWS);
+        return buildUrl(uri);
+    }
+
+    /**
+     * Builds the youtube Uri for the supplied video key.
+     *
+     * @param videoKey The key to the video.
+     * @return Uri to youtube for the video identified by the video key.
+     */
+    public static Uri buildYoutubeUri(String videoKey) {
+        return Uri.parse(YOUTUBE_BASE_URL).buildUpon()
+                .appendPath(YOUTUBE_VIDEOS_PATH)
+                .appendQueryParameter(YOUTUBE_QUERY_PARAM_KEY, videoKey)
                 .build();
-
-        URL url = null;
-        try {
-            url = new URL(uri.toString());
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
-
-        return url;
     }
 
     /**
@@ -80,5 +131,37 @@ public final class NetworkUtils {
         } finally {
             urlConnection.disconnect();
         }
+    }
+
+    /**
+     * Builds the Uri for the supplied path and query parameter.
+     *
+     * @param queryParam The query parameter
+     * @param paths      Paths to append to the base uri.
+     * @return Returns an Uri after appending the path and query param.
+     */
+    private static Uri buildUri(String queryParam, String... paths) {
+        Uri.Builder uriBuilder = Uri.parse(TMDB_BASE_URL).buildUpon();
+        for (String path : paths) {
+            uriBuilder.appendPath(path);
+        }
+        uriBuilder.appendQueryParameter(PARAM_QUERY_API_KEP, queryParam);
+        return uriBuilder.build();
+    }
+
+    /**
+     * Builds URL from the supplied URI.
+     *
+     * @param uri The URI from which the URL will be built.
+     * @return URL.
+     */
+    private static URL buildUrl(Uri uri) {
+        URL url = null;
+        try {
+            url = new URL(uri.toString());
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return url;
     }
 }

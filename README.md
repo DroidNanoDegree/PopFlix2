@@ -2,7 +2,7 @@ Hello there,
 
 The project in this folder contains the implementation for *Stage 2: Popular Movies* project part of the [Android Developer Nanodegree](https://www.udacity.com/course/android-developer-nanodegree-by-google--nd801).
 
-As per the requirement for the project, the following items will be added to the app you built in [Stage 1](https://droidnanodegree.github.io/PopFlix/):
+As per the requirement for the project, the following items have be added to the app on top of what was built in [Stage 1](https://droidnanodegree.github.io/PopFlix/):
 
 1. Allow users to view and play trailers ( either in the youtube app or a web browser).
 2. Allow users to read reviews of a selected movie.

@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#00020d</color>
-    <color name="colorPrimaryDark">#00020d</color>
-    <color name="colorAccent">#f4eff1</color>
-    <color name="colorText">#f4eff1</color>
+    <!-- Primary colors -->
+    <color name="primaryColor">#212121</color>
+    <color name="primaryLightColor">#484848</color>
+    <color name="primaryDarkColor">#000000</color>
 
-    <!-- Detail Activity -->
-    <color name="colorGreyLight">#d6d6d6</color>
-    <color name="colorGreyDark">#a4a4a4</color>
+    <!-- Secondary colors -->
+    <color name="secondaryColor">#ff6d00</color>
+    <color name="secondaryLightColor">#ff9e40</color>
+    <color name="secondaryDarkColor">#c43c00</color>
+
+    <!-- Text colors -->
+    <color name="primaryTextColor">#ffffff</color>
+    <color name="secondaryTextColor">#000000</color>
 </resources>
