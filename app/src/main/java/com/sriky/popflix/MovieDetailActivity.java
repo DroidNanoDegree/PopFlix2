@@ -204,7 +204,7 @@ public class MovieDetailActivity extends AppCompatActivity
 
         Log.d(TAG, "updateRecord() id =" + id);
         int formatId =
-                (mFavorite == true) ? R.string.movie_added_to_favorites
+                (mFavorite) ? R.string.movie_added_to_favorites
                         : R.string.movie_removed_from_favorites;
 
         if (mToast != null) {
@@ -223,13 +223,15 @@ public class MovieDetailActivity extends AppCompatActivity
     /**
      * Binds the views in this activity with the data from the cursor.
      *
-     * @param cursor
+     * @param cursor The cursor containing information about the movie.
      */
     private void bindViews(Cursor cursor) {
         Log.d(TAG, "bindViews: cursor count:" + cursor.getCount());
 
         /* move the cursor to the correct position */
-        cursor.moveToFirst();
+        if(!cursor.moveToFirst()) {
+            throw new RuntimeException("No data loaded in the cursor!");
+        }
 
         /* set the movie title
         * TODO: a11y support */
@@ -320,13 +322,9 @@ public class MovieDetailActivity extends AppCompatActivity
                     }
                 });
 
-
         int selectedTabIdx = mMovieDetailBinding.overviewReviews.vpOverviewReviews.getCurrentItem();
         if (mMovieDetailBinding.overviewReviews.tlOverviewReviews.getSelectedTabPosition()
                 != mDetailsFragmentPagerAdaptor.getItemPosition(selectedTabIdx)) {
-            Log.d(TAG, "*** bindViews: wrong tab marked as selected selectedTabPosition = "
-                    + mMovieDetailBinding.overviewReviews.tlOverviewReviews.getSelectedTabPosition()
-                    + " selectedTabIdx = " + selectedTabIdx);
             mMovieDetailBinding.overviewReviews.tlOverviewReviews.getTabAt(selectedTabIdx).select();
             mMovieDetailBinding.overviewReviews.vpOverviewReviews.reMeasureCurrentPage(
                     mMovieDetailBinding.overviewReviews.vpOverviewReviews.getCurrentItem());
