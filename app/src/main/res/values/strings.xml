@@ -45,7 +45,7 @@
     <string name="action_favorite">Favorite</string>
 
     <string name="a11y_movie_thumbnail">
-        <xliff:g id="movie_poster">%s</xliff:g>'s movie poster
+        <xliff:g id="movie_poster">%s</xliff:g>\'s movie poster
     </string>
 
     <string name="a11y_release_date">
