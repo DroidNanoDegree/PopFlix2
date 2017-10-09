@@ -36,6 +36,11 @@ public class MoviesDbHelper extends SQLiteOpenHelper {
      */
     public static final int DATABASE_VERSION = 2;
 
+    private static final String DATABASE_ALTER_TEAM_1 = "ALTER TABLE "
+            + MoviesEntry.TABLE_NAME
+            + " ADD COLUMN " + MoviesEntry.POPULAR + " BIT, "
+            + " ADD COLUMN " + MoviesEntry.TOP_RATED + " BIT;";
+
     public MoviesDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -70,8 +75,9 @@ public class MoviesDbHelper extends SQLiteOpenHelper {
     }
 
     @Override
-    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
-        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + MoviesEntry.TABLE_NAME);
-        onCreate(sqLiteDatabase);
+    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {
+        if (oldVersion < 1) {
+            sqLiteDatabase.execSQL(DATABASE_ALTER_TEAM_1);
+        }
     }
 }
