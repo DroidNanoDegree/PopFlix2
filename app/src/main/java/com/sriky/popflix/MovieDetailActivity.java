@@ -53,7 +53,9 @@ import java.util.ArrayList;
 public class MovieDetailActivity extends AppCompatActivity
         implements LoaderManager.LoaderCallbacks<String>,
         FetchMovieDataTaskLoader.FetchMovieDataTaskListener,
-        MovieTrailerAdaptor.MovieTrailerOnClickedListener {
+        MovieTrailerAdaptor.MovieTrailerOnClickedListener,
+        TabLayout.OnTabSelectedListener,
+        ViewPager.OnPageChangeListener {
 
     private static final String TAG = MovieDetailActivity.class.getSimpleName();
 
@@ -95,7 +97,6 @@ public class MovieDetailActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate()");
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_movie_detail);
 
         mMovieDetailBinding = DataBindingUtil.setContentView(this, R.layout.activity_movie_detail);
 
@@ -107,6 +108,19 @@ public class MovieDetailActivity extends AppCompatActivity
 
         mMovieTrailerAdaptor = new MovieTrailerAdaptor(this, this);
         mMovieDetailBinding.trailers.trailerRecyclerView.setAdapter(mMovieTrailerAdaptor);
+
+        /* add the tabbed layout to listen to page change notifications so that the ViewPager
+         * can be updated accordingly */
+        mMovieDetailBinding.overviewReviews.vpOverviewReviews.addOnPageChangeListener(
+                new TabLayout.TabLayoutOnPageChangeListener(
+                        mMovieDetailBinding.overviewReviews.tlOverviewReviews));
+
+        /* update the ViewPager to the appropriate page */
+        mMovieDetailBinding.overviewReviews.tlOverviewReviews.addOnTabSelectedListener(this);
+
+        /* update the page index when page changes so that ViewPager can resize according to the
+         * size of the view. */
+        mMovieDetailBinding.overviewReviews.vpOverviewReviews.addOnPageChangeListener(this);
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -151,6 +165,7 @@ public class MovieDetailActivity extends AppCompatActivity
 
     @Override
     protected void onDestroy() {
+        Log.d(TAG, "onDestroy:()");
         mCursor.close();
         super.onDestroy();
     }
@@ -233,6 +248,11 @@ public class MovieDetailActivity extends AppCompatActivity
             throw new RuntimeException("No data loaded in the cursor!");
         }
 
+        /* set the FragmentPagerAdaptor for the ViewPager used to display overview & reviews */
+        mDetailsFragmentPagerAdaptor =
+                new DetailsFragmentPagerAdaptor(getSupportFragmentManager(), cursor, mMovieId);
+        mMovieDetailBinding.overviewReviews.vpOverviewReviews.setAdapter(mDetailsFragmentPagerAdaptor);
+
         /* set the movie title */
         String title = cursor.getString(INDEX_MOVIE_TITLE);
         setTitle(title);
@@ -263,71 +283,6 @@ public class MovieDetailActivity extends AppCompatActivity
                 String.format(getString(R.string.format_ratings), ratings));
         mMovieDetailBinding.thumbnailWithDetails.tvRatings.setContentDescription(
                 getString(R.string.a11y_rating, Double.toString(ratings)));
-
-        /* set the FragmentPagerAdaptor for the ViewPager used to display overview & reviews */
-        mDetailsFragmentPagerAdaptor =
-                new DetailsFragmentPagerAdaptor(getSupportFragmentManager(), mCursor, mMovieId);
-        mMovieDetailBinding.overviewReviews.vpOverviewReviews.setAdapter(mDetailsFragmentPagerAdaptor);
-
-        /* add the tabbed layout to listen to page change notifications so that the ViewPager
-         * can be updated accordingly
-         */
-        mMovieDetailBinding.overviewReviews.vpOverviewReviews.addOnPageChangeListener(
-                new TabLayout.TabLayoutOnPageChangeListener(
-                        mMovieDetailBinding.overviewReviews.tlOverviewReviews));
-
-        /* update the ViewPager to the appropriate page */
-        mMovieDetailBinding.overviewReviews.tlOverviewReviews.addOnTabSelectedListener(
-                (new TabLayout.OnTabSelectedListener() {
-                    @Override
-                    public void onTabSelected(TabLayout.Tab tab) {
-                        Log.d(TAG, "onTabSelected: tab.position: " + tab.getPosition());
-                        mMovieDetailBinding.overviewReviews.vpOverviewReviews.setCurrentItem(
-                                tab.getPosition());
-                    }
-
-                    @Override
-                    public void onTabUnselected(TabLayout.Tab tab) {
-                        Log.d(TAG, "onTabUnselected: ");
-                    }
-
-                    @Override
-                    public void onTabReselected(TabLayout.Tab tab) {
-                        Log.d(TAG, "onTabReselected: ");
-                    }
-                }));
-
-        /* update the page index when page changes so that ViewPager can resize according to the
-         * size of the view.
-         */
-        mMovieDetailBinding.overviewReviews.vpOverviewReviews.addOnPageChangeListener(
-                new ViewPager.OnPageChangeListener() {
-                    @Override
-                    public void onPageScrolled(int position, float positionOffset,
-                                               int positionOffsetPixels) {
-                        Log.d(TAG, "onPageScrolled: ");
-                    }
-
-                    @Override
-                    public void onPageSelected(int position) {
-                        Log.d(TAG, "onPageSelected: position: " + position);
-                        mMovieDetailBinding.overviewReviews.vpOverviewReviews.reMeasureCurrentPage(
-                                mMovieDetailBinding.overviewReviews.vpOverviewReviews.getCurrentItem());
-                    }
-
-                    @Override
-                    public void onPageScrollStateChanged(int state) {
-                        Log.d(TAG, "onPageScrollStateChanged: ");
-                    }
-                });
-
-        int selectedTabIdx = mMovieDetailBinding.overviewReviews.vpOverviewReviews.getCurrentItem();
-        if (mMovieDetailBinding.overviewReviews.tlOverviewReviews.getSelectedTabPosition()
-                != mDetailsFragmentPagerAdaptor.getItemPosition(selectedTabIdx)) {
-            mMovieDetailBinding.overviewReviews.tlOverviewReviews.getTabAt(selectedTabIdx).select();
-            mMovieDetailBinding.overviewReviews.vpOverviewReviews.reMeasureCurrentPage(
-                    mMovieDetailBinding.overviewReviews.vpOverviewReviews.getCurrentItem());
-        }
     }
 
     /**
@@ -395,5 +350,40 @@ public class MovieDetailActivity extends AppCompatActivity
         if (intent.resolveActivity(getPackageManager()) != null) {
             startActivity(intent);
         }
+    }
+
+    @Override
+    public void onPageScrolled(int position, float positionOffset,
+                               int positionOffsetPixels) {
+        Log.d(TAG, "onPageScrolled: ");
+    }
+
+    @Override
+    public void onPageSelected(int position) {
+        Log.d(TAG, "onPageSelected: position: " + position);
+        mMovieDetailBinding.overviewReviews.vpOverviewReviews.reMeasureCurrentPage(
+                mMovieDetailBinding.overviewReviews.vpOverviewReviews.getCurrentItem());
+    }
+
+    @Override
+    public void onPageScrollStateChanged(int state) {
+        Log.d(TAG, "onPageScrollStateChanged: ");
+    }
+
+    @Override
+    public void onTabSelected(TabLayout.Tab tab) {
+        Log.d(TAG, "onTabSelected: tab.position: " + tab.getPosition());
+        mMovieDetailBinding.overviewReviews.vpOverviewReviews.setCurrentItem(
+                tab.getPosition());
+    }
+
+    @Override
+    public void onTabUnselected(TabLayout.Tab tab) {
+        Log.d(TAG, "onTabUnselected: ");
+    }
+
+    @Override
+    public void onTabReselected(TabLayout.Tab tab) {
+        Log.d(TAG, "onTabReselected: ");
     }
 }

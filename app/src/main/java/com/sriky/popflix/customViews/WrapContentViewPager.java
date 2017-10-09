@@ -20,13 +20,13 @@ import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.view.View;
 
-/**
- * Custom implementation of the ViewPager to resize the ViewPager to it's current page size.
+/*
+ * A simple view pager that supports wrapping of content
+ * by measuring first child and setting that as the viewpager's height.
  */
-
 public class WrapContentViewPager extends ViewPager {
 
-    private int mCurrentPagePosition = 0;
+    private int mCurrentPagePosition;
 
     public WrapContentViewPager(Context context) {
         super(context);
@@ -36,23 +36,41 @@ public class WrapContentViewPager extends ViewPager {
         super(context, attrs);
     }
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        try {
-            View child = getChildAt(mCurrentPagePosition);
-            if (child != null) {
-                child.measure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
-                int h = child.getMeasuredHeight();
-                heightMeasureSpec = MeasureSpec.makeMeasureSpec(h, MeasureSpec.EXACTLY);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-    }
-
     public void reMeasureCurrentPage(int position) {
         mCurrentPagePosition = position;
         requestLayout();
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
+        // find the first child view
+        View view = getChildAt(mCurrentPagePosition);
+        if (view != null) {
+            // measure the first child view with the specified measure spec
+            view.measure(widthMeasureSpec, heightMeasureSpec);
+        }
+
+        setMeasuredDimension(getMeasuredWidth(), measureHeight(heightMeasureSpec, view));
+    }
+
+    private int measureHeight(int measureSpec, View view) {
+        int result = 0;
+        int specMode = MeasureSpec.getMode(measureSpec);
+        int specSize = MeasureSpec.getSize(measureSpec);
+
+        if (specMode == MeasureSpec.EXACTLY) {
+            result = specSize;
+        } else {
+            // set the height from the base view if available
+            if (view != null) {
+                result = view.getMeasuredHeight();
+            }
+            if (specMode == MeasureSpec.AT_MOST) {
+                result = Math.min(result, specSize);
+            }
+        }
+        return result;
     }
 }
