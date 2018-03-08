@@ -64,7 +64,8 @@ public class MovieDataSyncUtils {
                 /* setting the constraints to perform the job only on Wifi.*/
                 .setConstraints(Constraint.ON_UNMETERED_NETWORK)
                 /* setting the execution window for the job anywhere from 3hours to 4hours */
-                .setTrigger(Trigger.executionWindow(SYNC_INTERVAL_HOURS, SYNC_FLEXTIME_SECONDS))
+                .setTrigger(Trigger.executionWindow(SYNC_INTERVAL_SECONDS,
+                        SYNC_INTERVAL_SECONDS + SYNC_FLEXTIME_SECONDS))
                 /* since we need the data to be updated regularly, it should be a recurring job */
                 .setRecurring(true)
                 /* the service to perform the job */
